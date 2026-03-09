@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>業務プロセス改善ナビゲーター</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+  <div id="app">
+    <!-- サイドバー -->
+    <nav id="sidebar">
+      <div class="sidebar-header">
+        <h1 class="logo">BPI<span>Navi</span></h1>
+        <p class="logo-sub">業務プロセス改善ナビゲーター</p>
+      </div>
+      <div class="sidebar-project" id="currentProjectInfo" style="display:none;">
+        <div class="project-badge" id="projectBadge"></div>
+      </div>
+      <ul class="nav-menu">
+        <li class="nav-item active" data-view="dashboard">
+          <span class="nav-icon">&#9633;</span>ダッシュボード
+        </li>
+        <li class="nav-separator">改善ステップ</li>
+        <li class="nav-item" data-view="step1">
+          <span class="nav-step">1</span>業務プロセスの洗い出し
+        </li>
+        <li class="nav-item" data-view="step2">
+          <span class="nav-step">2</span>問題点の可視化と分析
+        </li>
+        <li class="nav-item" data-view="step3">
+          <span class="nav-step">3</span>ECRS改善対象の選定
+        </li>
+        <li class="nav-item" data-view="step4">
+          <span class="nav-step">4</span>具体的な改善策の検討
+        </li>
+        <li class="nav-item" data-view="step5">
+          <span class="nav-step">5</span>効果検証と振り返り
+        </li>
+        <li class="nav-separator">管理</li>
+        <li class="nav-item" data-view="settings">
+          <span class="nav-icon">&#9881;</span>設定・マスタ管理
+        </li>
+      </ul>
+    </nav>
+
+    <!-- メインコンテンツ -->
+    <main id="main-content">
+      <header id="topbar">
+        <div class="topbar-row">
+          <button id="menuToggle" class="menu-toggle">&#9776;</button>
+          <div class="topbar-title" id="topbarTitle">ダッシュボード</div>
+          <div class="topbar-actions">
+            <div class="dropdown" id="saveDropdown">
+              <button class="btn btn-outline btn-sm dropdown-toggle" id="btnSaveMenu" title="保存メニュー">&#128190; 保存 &#9662;</button>
+              <div class="dropdown-menu" id="saveDropdownMenu">
+                <button class="dropdown-item" id="btnFileSaveAll">&#128451; 全データ保存</button>
+                <button class="dropdown-item" id="btnFileSaveCompany" style="display:none;">&#127970; この企業を保存</button>
+                <button class="dropdown-item" id="btnFileSaveProj" style="display:none;">&#128196; このプロジェクトを保存</button>
+              </div>
+            </div>
+            <div class="dropdown" id="loadDropdown">
+              <button class="btn btn-outline btn-sm dropdown-toggle" id="btnLoadMenu" title="読込メニュー">&#128194; 読込 &#9662;</button>
+              <div class="dropdown-menu" id="loadDropdownMenu">
+                <button class="dropdown-item" id="btnFileLoadAll">&#128451; 全データ読込（上書き）</button>
+                <button class="dropdown-item" id="btnFileLoadMerge">&#128196; プロジェクト読込（更新/追加）</button>
+              </div>
+            </div>
+            <input type="file" id="loadFileInput" accept=".json" style="display:none;">
+            <input type="file" id="loadProjectInput" accept=".json" style="display:none;">
+          </div>
+        </div>
+        <div id="topbarProjectBar" class="topbar-project-bar" style="display:none;">
+          <span class="topbar-company" id="topbarCompany"></span>
+          <span class="topbar-separator">／</span>
+          <span class="topbar-project-name" id="topbarProjectName"></span>
+        </div>
+      </header>
+      <div id="stepNavBar" class="step-nav-bar" style="display:none;">
+        <div class="step-nav-inner" id="topbarSteps"></div>
+      </div>
+
+      <div id="content-area">
+        <!-- ダッシュボード -->
+        <div class="view active" id="view-dashboard">
+          <div class="view-header">
+            <h2>プロジェクト一覧</h2>
+            <div class="view-header-actions">
+              <button class="btn btn-outline" id="btnAddCompany">🏢 企業を登録</button>
+              <button class="btn btn-primary" id="btnNewProject">新規プロジェクト作成</button>
+            </div>
+          </div>
+          <div id="projectList"></div>
+          <div id="noProjects" class="empty-state">
+            <div class="empty-icon">&#128203;</div>
+            <h3>プロジェクトがありません</h3>
+            <p>「新規プロジェクト作成」ボタンから始めましょう。</p>
+            <button class="btn btn-outline" id="btnLoadDemo" style="margin-top:12px;">&#128296; デモデータを読み込む（(株)KK精工）</button>
+          </div>
+        </div>
+
+        <!-- Step1: 業務プロセスの洗い出し -->
+        <div class="view" id="view-step1">
+          <div class="view-header">
+            <h2><span class="step-badge">Step 1</span> 業務プロセスの洗い出し</h2>
+            <div class="view-actions">
+              <button class="btn btn-ai" onclick="window.BPI.openAIAssist(1)">🤖 AIアシスト</button>
+              <button class="btn btn-outline" id="btnImportCSV">CSVインポート</button>
+              <button class="btn btn-outline" onclick="window.BPI.renumberCodes()">コード再採番</button>
+              <button class="btn btn-primary" id="btnAddTask">業務を追加</button>
+            </div>
+          </div>
+          <input type="file" id="csvFileInput" accept=".csv,.tsv,.txt" style="display:none;">
+          <div class="step-guide">
+            <div class="guide-icon">&#128161;</div>
+            <div class="guide-text">
+              <strong>気づきポイント</strong>：全業務を「誰が・何を・どうやって・どのくらい」で棚卸しましょう。
+              「こんなに多くの作業をしていたのか」という気づきが改善の第一歩です。
+            </div>
+          </div>
+          <!-- プロセス区分タブ -->
+          <div class="process-tabs" id="processTabs"></div>
+          <!-- 業務一覧テーブル -->
+          <div class="table-container">
+            <table class="data-table" id="taskTable">
+              <thead>
+                <tr>
+                  <th style="width:40px;">No.</th>
+                  <th style="width:80px;">コード</th>
+                  <th style="width:90px;">プロセス区分</th>
+                  <th>作業内容</th>
+                  <th style="width:80px;">担当者</th>
+                  <th style="width:80px;">対象</th>
+                  <th style="width:120px;">方法</th>
+                  <th style="width:70px;">所要時間</th>
+                  <th style="width:60px;">頻度</th>
+                  <th style="width:100px;">ツール</th>
+                  <th style="width:120px;">備考</th>
+                  <th style="width:130px;">操作</th>
+                </tr>
+              </thead>
+              <tbody id="taskTableBody"></tbody>
+            </table>
+          </div>
+          <div id="noTasks" class="empty-state" style="display:none;">
+            <div class="empty-icon">&#128221;</div>
+            <h3>業務データがありません</h3>
+            <p>「業務を追加」ボタンまたは「CSVインポート」で業務を登録しましょう。</p>
+          </div>
+          <!-- プロセスマップ -->
+          <div class="section-divider">
+            <h3>業務プロセスマップ</h3>
+            <button class="btn btn-sm btn-outline" id="btnToggleMap">マップ表示 / 非表示</button>
+          </div>
+          <div id="processMapArea" class="process-map-container" style="display:none;"></div>
+          <div class="step-footer">
+            <div class="step-stats" id="step1Stats"></div>
+            <button class="btn btn-primary" id="btnGoStep2">Step 2 へ進む &rarr;</button>
+          </div>
+        </div>
+
+        <!-- Step2: 問題点の可視化と分析 -->
+        <div class="view" id="view-step2">
+          <div class="view-header">
+            <h2><span class="step-badge">Step 2</span> 問題点の可視化と分析</h2>
+            <div class="view-actions">
+              <button class="btn btn-ai" onclick="window.BPI.openAIAssist(2)">🤖 AIアシスト</button>
+              <button class="btn btn-outline active" id="btnStep2Scoring" data-sub="scoring">スコアリング</button>
+              <button class="btn btn-outline" id="btnStep2Dashboard" data-sub="analysis">分析ダッシュボード</button>
+            </div>
+          </div>
+          <div class="step-guide">
+            <div class="guide-icon">&#128270;</div>
+            <div class="guide-text">
+              <strong>気づきポイント</strong>：各業務の問題点を分類し、影響度をスコアリングしましょう。
+              「この業務にこれだけの時間を費やしていた」という事実に気づくことが重要です。
+            </div>
+          </div>
+          <!-- スコアリングサブビュー -->
+          <div id="sub-scoring" class="sub-view active">
+            <div class="scoring-list" id="scoringList"></div>
+          </div>
+          <!-- 分析ダッシュボードサブビュー -->
+          <div id="sub-analysis" class="sub-view" style="display:none;">
+            <div class="chart-grid">
+              <div class="chart-card">
+                <h4>問題カテゴリ別パレート図</h4>
+                <canvas id="chartPareto"></canvas>
+              </div>
+              <div class="chart-card">
+                <h4>ヒートマップ（プロセス × 問題カテゴリ）</h4>
+                <div id="heatmapContainer" class="heatmap-container"></div>
+              </div>
+              <div class="chart-card">
+                <h4>時間分析（付加価値 / 非付加価値）</h4>
+                <canvas id="chartTimeAnalysis"></canvas>
+              </div>
+              <div class="chart-card">
+                <h4>改善効果 × 実施難易度バブルチャート</h4>
+                <canvas id="chartBubble"></canvas>
+              </div>
+            </div>
+          </div>
+          <div class="step-footer">
+            <button class="btn btn-outline" id="btnBackStep1">&larr; Step 1 に戻る</button>
+            <button class="btn btn-primary" id="btnGoStep3">Step 3 へ進む &rarr;</button>
+          </div>
+        </div>
+
+        <!-- Step3: ECRS改善対象の選定 -->
+        <div class="view" id="view-step3">
+          <div class="view-header">
+            <h2><span class="step-badge">Step 3</span> ECRSによる改善対象の選定</h2>
+            <div class="view-actions">
+              <button class="btn btn-ai" onclick="window.BPI.openAIAssist(3)">🤖 AIアシスト</button>
+              <button class="btn btn-outline active" id="btnStep3Wizard" data-sub="wizard">ECRSウィザード</button>
+              <button class="btn btn-outline" id="btnStep3List" data-sub="candidates">改善候補一覧</button>
+            </div>
+          </div>
+          <div class="step-guide">
+            <div class="guide-icon">&#127919;</div>
+            <div class="guide-text">
+              <strong>気づきポイント</strong>：ECRS（排除・結合・交換・簡素化）の視点で各業務を見直しましょう。
+              「なくせる業務がこんなにあった」という発見が生まれます。
+            </div>
+          </div>
+          <!-- ECRSウィザード -->
+          <div id="sub-wizard" class="sub-view active">
+            <div id="ecrsWizardArea"></div>
+          </div>
+          <!-- 改善候補一覧 -->
+          <div id="sub-candidates" class="sub-view" style="display:none;">
+            <div id="candidatesList"></div>
+          </div>
+          <div class="step-footer">
+            <button class="btn btn-outline" id="btnBackStep2">&larr; Step 2 に戻る</button>
+            <button class="btn btn-primary" id="btnGoStep4">Step 4 へ進む &rarr;</button>
+          </div>
+        </div>
+
+        <!-- Step4: 具体的な改善策の検討 -->
+        <div class="view" id="view-step4">
+          <div class="view-header">
+            <h2><span class="step-badge">Step 4</span> 具体的な改善策の検討</h2>
+            <div class="view-actions">
+              <button class="btn btn-ai" onclick="window.BPI.openAIAssist(4)">🤖 AIアシスト</button>
+              <button class="btn btn-outline active" id="btnStep4Plans" data-sub="plans">改善計画</button>
+              <button class="btn btn-outline" id="btnStep4Gantt" data-sub="gantt">ガントチャート</button>
+            </div>
+          </div>
+          <div class="step-guide">
+            <div class="guide-icon">&#128736;</div>
+            <div class="guide-text">
+              <strong>気づきポイント</strong>：改善候補ごとに具体的なアクションプランを立てましょう。
+              「自分たちでもできる改善がある」という自信につなげます。
+            </div>
+          </div>
+          <!-- 改善計画サブビュー -->
+          <div id="sub-plans" class="sub-view active">
+            <div id="improvementPlans"></div>
+          </div>
+          <!-- ガントチャートサブビュー -->
+          <div id="sub-gantt" class="sub-view" style="display:none;">
+            <div id="ganttChart" class="gantt-container"></div>
+          </div>
+          <div class="step-footer">
+            <button class="btn btn-outline" id="btnBackStep3">&larr; Step 3 に戻る</button>
+            <button class="btn btn-primary" id="btnGoStep5">Step 5 へ進む &rarr;</button>
+          </div>
+        </div>
+
+        <!-- Step5: 効果検証と振り返り -->
+        <div class="view" id="view-step5">
+          <div class="view-header">
+            <h2><span class="step-badge">Step 5</span> 効果検証と振り返り</h2>
+            <div class="view-actions">
+              <button class="btn btn-ai" onclick="window.BPI.openAIAssist(5)">🤖 AIアシスト</button>
+              <button class="btn btn-outline active" id="btnStep5Measure" data-sub="measure">効果測定</button>
+              <button class="btn btn-outline" id="btnStep5Report" data-sub="report">レポート</button>
+            </div>
+          </div>
+          <div class="step-guide">
+            <div class="guide-icon">&#128200;</div>
+            <div class="guide-text">
+              <strong>気づきポイント</strong>：改善前後のデータを比較し、定量的に効果を確認しましょう。
+              「実際にこれだけ改善できた」という成功体験が次の改善サイクルにつながります。
+            </div>
+          </div>
+          <!-- 効果測定サブビュー -->
+          <div id="sub-measure" class="sub-view active">
+            <div id="measurementArea"></div>
+          </div>
+          <!-- レポートサブビュー -->
+          <div id="sub-report" class="sub-view" style="display:none;">
+            <div id="reportArea"></div>
+          </div>
+          <div class="step-footer">
+            <button class="btn btn-outline" id="btnBackStep4">&larr; Step 4 に戻る</button>
+            <button class="btn btn-primary" id="btnNewCycle">次の改善サイクルへ</button>
+          </div>
+        </div>
+
+        <!-- 設定・マスタ管理 -->
+        <div class="view" id="view-settings">
+          <div class="view-header">
+            <h2>設定・マスタ管理</h2>
+          </div>
+          <div class="settings-grid">
+            <div class="settings-card">
+              <h3>プロセス区分マスタ</h3>
+              <p>受注、生産管理、製造、品質管理、出荷、購買等のプロセス区分を管理します。</p>
+              <div id="processCategoryMaster"></div>
+              <div class="settings-actions">
+                <input type="text" id="newCategoryInput" placeholder="新しいプロセス区分名">
+                <button class="btn btn-sm btn-primary" id="btnAddCategory">追加</button>
+              </div>
+            </div>
+            <div class="settings-card">
+              <h3>問題カテゴリマスタ</h3>
+              <p>問題点の分類カテゴリを管理します。</p>
+              <div id="problemCategoryMaster"></div>
+            </div>
+            <div class="settings-card">
+              <h3>データ管理</h3>
+              <p>プロジェクトデータのエクスポート・インポートができます。</p>
+              <div class="settings-actions">
+                <button class="btn btn-outline" id="btnExportAll">全データエクスポート</button>
+                <button class="btn btn-outline" id="btnImportAll">データインポート</button>
+                <input type="file" id="importFileInput" accept=".json" style="display:none;">
+              </div>
+            </div>
+            <div class="settings-card">
+              <h3>改善提案テンプレート</h3>
+              <p>問題カテゴリに応じた改善提案のテンプレート・ヒント集です。</p>
+              <div id="templateList"></div>
+            </div>
+            <div class="settings-card settings-card-ai">
+              <h3>🤖 AI設定</h3>
+              <p>AIアシスト機能で使用するAPIの設定です。APIキーはブラウザのlocalStorageに保存されます（個人利用向け）。</p>
+              <div class="form-group">
+                <label>AIプロバイダー</label>
+                <select id="aiProvider" class="form-control">
+                  <option value="claude">Claude (Anthropic)</option>
+                  <option value="openai">OpenAI</option>
+                  <option value="gemini">Gemini (Google)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>APIキー</label>
+                <div style="display:flex;gap:8px;">
+                  <input type="password" id="aiApiKey" class="form-control" placeholder="APIキーを入力">
+                  <button class="btn btn-sm btn-outline" id="btnToggleApiKey" type="button">表示</button>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>モデル</label>
+                <select id="aiModel" class="form-control"></select>
+              </div>
+              <div class="settings-actions">
+                <button class="btn btn-sm btn-primary" id="btnSaveAIConfig">設定を保存</button>
+                <button class="btn btn-sm btn-outline" id="btnTestAI">接続テスト</button>
+              </div>
+              <div id="aiTestResult" style="margin-top:8px;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- 印刷用レポートコンテナ（画面上は非表示、印刷時のみ表示） -->
+  <div id="printReport" class="print-report-container"></div>
+
+  <!-- モーダル: プロジェクト作成 -->
+  <div class="modal-overlay" id="modalProject">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="modalProjectTitle">新規プロジェクト作成</h3>
+        <button class="modal-close" data-close="modalProject">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>プロジェクト名 <span class="required">*</span></label>
+          <input type="text" id="projectName" placeholder="例：第1回 業務改善プロジェクト">
+        </div>
+        <div class="form-group">
+          <label>企業名 <span class="required">*</span></label>
+          <select id="projectCompany">
+            <option value="">-- 選択してください --</option>
+            <option value="__new__">＋ 新しい企業を登録...</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>対象プロセス</label>
+          <div id="projectProcesses" class="checkbox-group"></div>
+        </div>
+        <div class="form-group">
+          <label>メモ</label>
+          <textarea id="projectMemo" rows="3" placeholder="プロジェクトに関するメモ"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" data-close="modalProject">キャンセル</button>
+        <button class="btn btn-primary" id="btnSaveProject">作成</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- モーダル: 業務タスク追加/編集 -->
+  <div class="modal-overlay" id="modalTask">
+    <div class="modal modal-lg">
+      <div class="modal-header">
+        <h3 id="modalTaskTitle">業務タスクの追加</h3>
+        <button class="modal-close" data-close="modalTask">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label>プロセス区分 <span class="required">*</span></label>
+            <select id="taskCategory"></select>
+          </div>
+          <div class="form-group">
+            <label>コード</label>
+            <input type="text" id="taskCode" readonly placeholder="自動採番">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>作業内容（何を） <span class="required">*</span></label>
+          <input type="text" id="taskContent" placeholder="具体的な作業内容を記述">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>担当者（誰が）</label>
+            <input type="text" id="taskPerson" placeholder="役職・部門">
+          </div>
+          <div class="form-group">
+            <label>対象（誰/何に対して）</label>
+            <input type="text" id="taskTarget" placeholder="作業の対象者・対象物">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>方法（どうやって）</label>
+          <input type="text" id="taskMethod" placeholder="作業の実施方法">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>所要時間</label>
+            <div class="input-with-unit">
+              <input type="number" id="taskTime" min="0" step="1" placeholder="0">
+              <select id="taskTimeUnit">
+                <option value="分">分</option>
+                <option value="分/回">分/回</option>
+                <option value="分/件">分/件</option>
+                <option value="時間">時間</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>頻度</label>
+            <div class="input-with-unit">
+              <select id="taskFreqType">
+                <option value="日次">日次</option>
+                <option value="週次">週次</option>
+                <option value="月次">月次</option>
+                <option value="不定期">不定期</option>
+              </select>
+              <input type="number" id="taskFreqCount" min="1" step="1" value="1" placeholder="回数">
+              <span class="unit-label">回</span>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>使用ツール・書類</label>
+          <input type="text" id="taskTools" placeholder="使用するシステム、ツール、帳票">
+        </div>
+        <div class="form-group">
+          <label>備考（問題点・気づき）</label>
+          <textarea id="taskNotes" rows="2" placeholder="現場で感じている課題や気づき"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" data-close="modalTask">キャンセル</button>
+        <button class="btn btn-primary" id="btnSaveTask">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- モーダル: ECRS判定 -->
+  <div class="modal-overlay" id="modalECRS">
+    <div class="modal modal-lg">
+      <div class="modal-header">
+        <h3>ECRS判定ウィザード</h3>
+        <button class="modal-close" data-close="modalECRS">&times;</button>
+      </div>
+      <div class="modal-body" id="ecrsWizardContent"></div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" id="btnECRSPrev" style="display:none;">&larr; 前へ</button>
+        <button class="btn btn-primary" id="btnECRSNext">次へ &rarr;</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- モーダル: 改善計画 -->
+  <div class="modal-overlay" id="modalImprovement">
+    <div class="modal modal-lg">
+      <div class="modal-header">
+        <h3 id="modalImprovementTitle">改善アクションプラン</h3>
+        <button class="modal-close" data-close="modalImprovement">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>改善対象業務</label>
+          <input type="text" id="impTaskName" readonly>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>ECRS区分</label>
+            <input type="text" id="impECRS" readonly>
+          </div>
+          <div class="form-group">
+            <label>優先度スコア</label>
+            <input type="text" id="impScore" readonly>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>改善内容 <span class="required">*</span></label>
+          <textarea id="impContent" rows="3" placeholder="具体的に何をどう変えるか"></textarea>
+        </div>
+        <div class="form-group">
+          <label>改善手段</label>
+          <select id="impMethod">
+            <option value="">選択してください</option>
+            <option value="ツール導入">ツール導入</option>
+            <option value="手順変更">手順変更</option>
+            <option value="レイアウト変更">レイアウト変更</option>
+            <option value="教育訓練">教育訓練</option>
+            <option value="システム化">システム化</option>
+            <option value="廃止">廃止</option>
+            <option value="その他">その他</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>担当者</label>
+            <input type="text" id="impPerson" placeholder="改善実施の責任者">
+          </div>
+          <div class="form-group">
+            <label>必要リソース</label>
+            <input type="text" id="impResources" placeholder="費用、人員、時間">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>開始日</label>
+            <input type="date" id="impStartDate">
+          </div>
+          <div class="form-group">
+            <label>完了目標日</label>
+            <input type="date" id="impEndDate">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>期待効果（定量）</label>
+            <input type="text" id="impEffectQuantity" placeholder="例：月30分削減">
+          </div>
+          <div class="form-group">
+            <label>期待効果（定性）</label>
+            <input type="text" id="impEffectQuality" placeholder="例：ストレス軽減">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" data-close="modalImprovement">キャンセル</button>
+        <button class="btn btn-primary" id="btnSaveImprovement">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- モーダル: 効果測定入力 -->
+  <div class="modal-overlay" id="modalMeasure">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>効果測定データ入力</h3>
+        <button class="modal-close" data-close="modalMeasure">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>改善対象業務</label>
+          <input type="text" id="measureTaskName" readonly>
+        </div>
+        <div class="form-group">
+          <label>改善後の所要時間</label>
+          <div class="input-with-unit">
+            <input type="number" id="measureAfterTime" min="0" step="1">
+            <span class="unit-label" id="measureUnit"></span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>達成率（%）</label>
+          <input type="number" id="measureAchievement" min="0" max="200" step="1" placeholder="目標に対する達成率">
+        </div>
+        <div class="form-group">
+          <label>測定日</label>
+          <input type="date" id="measureDate">
+        </div>
+        <div class="form-group">
+          <label>コメント</label>
+          <textarea id="measureComment" rows="2" placeholder="改善の所感"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" data-close="modalMeasure">キャンセル</button>
+        <button class="btn btn-primary" id="btnSaveMeasure">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- モーダル: 企業登録/編集 -->
+  <div class="modal-overlay" id="modalCompany">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="modalCompanyTitle">企業を登録</h3>
+        <button class="modal-close" data-close="modalCompany">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>企業名 <span class="required">*</span></label>
+          <input type="text" id="companyName" placeholder="例: 株式会社サンプル製造">
+        </div>
+        <div class="form-group">
+          <label>企業概要（任意）</label>
+          <textarea id="companyDescription" rows="4" placeholder="例: 精密機械部品の製造。従業員120名。主に自動車業界向け。&#10;AIアシストの精度向上に活用されます。"></textarea>
+          <small class="form-hint">💡 AIアシストが企業の特性に合った提案を行うために活用されます</small>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" data-close="modalCompany">キャンセル</button>
+        <button class="btn btn-primary" id="btnSaveCompany">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- モーダル: AIアシスト -->
+  <div class="modal-overlay" id="modalAIAssist">
+    <div class="modal modal-lg">
+      <div class="modal-header">
+        <h3 id="aiAssistTitle">🤖 AIアシスト</h3>
+        <button class="modal-close" data-close="modalAIAssist">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="aiContextInfo" class="ai-context-info"></div>
+        <div class="form-group">
+          <label>AIへの追加指示（任意）</label>
+          <textarea id="aiExtraPrompt" class="form-control" rows="2" placeholder="例: 特に紙作業の削減を重視して提案してください"></textarea>
+        </div>
+        <div id="aiResultArea" class="ai-result-area"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" data-close="modalAIAssist">閉じる</button>
+        <button class="btn btn-ai" id="btnAIGenerate">🤖 提案を取得</button>
+        <button class="btn btn-primary" id="btnAIApply" style="display:none;">✅ 選択した提案を適用</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 通知トースト -->
+  <div id="toast" class="toast"></div>
+
+  <script src="js/ai-assist.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
