@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>使い方ガイド - BPI Navigator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Noto Sans JP', 'Inter', sans-serif;
+      background: #f0f4f8;
+      color: #1a2233;
+      line-height: 1.8;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ─── Hero ─── */
+    .hero {
+      background: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #60a5fa 100%);
+      color: #fff;
+      padding: 60px 24px 48px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      right: 0;
+      height: 40px;
+      background: #f0f4f8;
+      border-radius: 50% 50% 0 0;
+    }
+    .hero-logo {
+      font-size: 2.4rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+    .hero-logo span { color: #93c5fd; font-weight: 400; }
+    .hero h1 {
+      font-size: 1.6rem;
+      font-weight: 600;
+      margin: 12px 0 8px;
+    }
+    .hero p {
+      font-size: 0.95rem;
+      opacity: 0.9;
+      max-width: 560px;
+      margin: 0 auto;
+    }
+    .hero-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 20px;
+      padding: 8px 20px;
+      background: rgba(255,255,255,0.15);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 0.9rem;
+      transition: background 0.2s;
+    }
+    .hero-back:hover { background: rgba(255,255,255,0.25); }
+
+    /* ─── Container ─── */
+    .container {
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 0 20px 80px;
+    }
+
+    /* ─── TOC ─── */
+    .toc {
+      background: #fff;
+      border-radius: 16px;
+      padding: 28px 32px;
+      margin: -20px auto 40px;
+      position: relative;
+      z-index: 1;
+      box-shadow: 0 4px 24px rgba(30,64,175,0.08);
+    }
+    .toc h2 {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: #475569;
+      margin-bottom: 16px;
+    }
+    .toc-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 8px;
+      list-style: none;
+    }
+    .toc-list a {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: 10px;
+      text-decoration: none;
+      color: #1e40af;
+      font-size: 0.88rem;
+      font-weight: 500;
+      transition: background 0.15s;
+    }
+    .toc-list a:hover { background: #eff6ff; }
+    .toc-num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 26px;
+      height: 26px;
+      border-radius: 8px;
+      background: #dbeafe;
+      color: #1e40af;
+      font-size: 0.75rem;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    /* ─── Section ─── */
+    .section {
+      background: #fff;
+      border-radius: 16px;
+      padding: 32px;
+      margin-bottom: 28px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+    }
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+    .step-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: #1e40af;
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.85rem;
+      padding: 0 12px;
+      flex-shrink: 0;
+    }
+    .step-badge.green { background: #059669; }
+    .step-badge.purple { background: #7c3aed; }
+    .step-badge.orange { background: #d97706; }
+    .step-badge.red { background: #dc2626; }
+    .step-badge.teal { background: #0d9488; }
+    .step-badge.pink { background: #db2777; }
+    .step-badge.gray { background: #475569; }
+    .section h2 {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #1a2233;
+    }
+    .section h3 {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: #334155;
+      margin: 24px 0 12px;
+      padding-left: 12px;
+      border-left: 3px solid #3b82f6;
+    }
+    .section p, .section li {
+      font-size: 0.92rem;
+      color: #475569;
+    }
+
+    /* ─── Steps List ─── */
+    .steps-list {
+      counter-reset: step;
+      list-style: none;
+      padding: 0;
+    }
+    .steps-list > li {
+      counter-increment: step;
+      position: relative;
+      padding: 12px 0 12px 48px;
+      border-bottom: 1px solid #f1f5f9;
+    }
+    .steps-list > li:last-child { border-bottom: none; }
+    .steps-list > li::before {
+      content: counter(step);
+      position: absolute;
+      left: 0;
+      top: 14px;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #eff6ff;
+      color: #1e40af;
+      font-weight: 700;
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .steps-list strong { color: #1e40af; }
+
+    /* ─── Callout ─── */
+    .callout {
+      display: flex;
+      gap: 12px;
+      padding: 16px 18px;
+      border-radius: 12px;
+      margin: 16px 0;
+      font-size: 0.88rem;
+      line-height: 1.7;
+    }
+    .callout-icon {
+      font-size: 1.2rem;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .callout.tip {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      color: #166534;
+    }
+    .callout.warn {
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      color: #92400e;
+    }
+    .callout.info {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      color: #1e40af;
+    }
+
+    /* ─── UI Mock ─── */
+    .ui-mock {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 20px;
+      margin: 16px 0;
+      font-size: 0.85rem;
+    }
+    .ui-mock-title {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 12px;
+    }
+    .mock-btn {
+      display: inline-block;
+      padding: 6px 16px;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin: 2px 4px 2px 0;
+      border: none;
+    }
+    .mock-btn.primary { background: #2563eb; color: #fff; }
+    .mock-btn.outline { background: #fff; color: #334155; border: 1px solid #cbd5e1; }
+    .mock-btn.green { background: #059669; color: #fff; }
+    .mock-btn.red { background: #ef4444; color: #fff; }
+    .mock-btn.orange { background: #f59e0b; color: #fff; }
+
+    .mock-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 8px 0;
+      font-size: 0.8rem;
+    }
+    .mock-table th {
+      background: #1e40af;
+      color: #fff;
+      padding: 8px 12px;
+      text-align: left;
+      font-weight: 600;
+    }
+    .mock-table td {
+      padding: 8px 12px;
+      border-bottom: 1px solid #e2e8f0;
+      color: #475569;
+    }
+    .mock-table tr:nth-child(even) td { background: #f8fafc; }
+
+    .mock-card {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 14px 18px;
+      margin: 8px 0;
+    }
+
+    .mock-flow {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+      padding: 16px 0;
+    }
+    .mock-flow-step {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      font-weight: 700;
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+    .mock-flow-step.active { background: #2563eb; color: #fff; }
+    .mock-flow-step.done { background: #059669; color: #fff; }
+    .mock-flow-step.pending { background: #e2e8f0; color: #94a3b8; }
+    .mock-flow-arrow { color: #94a3b8; font-size: 1.2rem; }
+
+    .mock-tag {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin: 2px;
+    }
+    .mock-tag.e { background: #fee2e2; color: #dc2626; }
+    .mock-tag.c { background: #fef3c7; color: #d97706; }
+    .mock-tag.r { background: #dbeafe; color: #2563eb; }
+    .mock-tag.s { background: #d1fae5; color: #059669; }
+    .mock-tag.problem { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+
+    .mock-kpi-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 10px;
+      margin: 12px 0;
+    }
+    .mock-kpi {
+      text-align: center;
+      padding: 12px;
+      border-radius: 10px;
+      background: #f0f7ff;
+      border: 1px solid #dbeafe;
+    }
+    .mock-kpi .num { font-size: 1.5rem; font-weight: 700; color: #1e40af; }
+    .mock-kpi .label { font-size: 0.72rem; color: #64748b; margin-top: 2px; }
+
+    .mock-sidebar {
+      display: flex;
+      gap: 16px;
+    }
+    .mock-sidebar-nav {
+      width: 200px;
+      background: #1e293b;
+      border-radius: 10px;
+      padding: 14px;
+      flex-shrink: 0;
+    }
+    .mock-sidebar-nav .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      color: #94a3b8;
+      font-size: 0.78rem;
+      cursor: default;
+    }
+    .mock-sidebar-nav .nav-item.active {
+      background: rgba(59,130,246,0.15);
+      color: #60a5fa;
+    }
+    .mock-sidebar-nav .nav-item .num {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #334155;
+      color: #94a3b8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      font-weight: 700;
+    }
+    .mock-sidebar-nav .nav-item.active .num {
+      background: #2563eb;
+      color: #fff;
+    }
+    .mock-sidebar-main {
+      flex: 1;
+      background: #fff;
+      border-radius: 10px;
+      padding: 14px;
+      border: 1px solid #e2e8f0;
+    }
+
+    /* ─── Responsive ─── */
+    @media (max-width: 640px) {
+      .hero { padding: 40px 16px 36px; }
+      .hero-logo { font-size: 1.8rem; }
+      .hero h1 { font-size: 1.2rem; }
+      .container { padding: 0 12px 60px; }
+      .section { padding: 20px 16px; }
+      .toc { padding: 20px; }
+      .toc-list { grid-template-columns: 1fr; }
+      .mock-sidebar { flex-direction: column; }
+      .mock-sidebar-nav { width: 100%; }
+    }
+
+    /* ─── Footer ─── */
+    .footer {
+      text-align: center;
+      padding: 40px 20px;
+      color: #94a3b8;
+      font-size: 0.82rem;
+    }
+    .footer a { color: #3b82f6; text-decoration: none; }
+    .footer a:hover { text-decoration: underline; }
+
+    /* smooth scroll */
+    html { scroll-behavior: smooth; }
+  </style>
+</head>
+<body>
+
+<!-- ───────── Hero ───────── -->
+<div class="hero">
+  <div class="hero-logo">BPI<span>Navi</span></div>
+  <h1>使い方ガイド</h1>
+  <p>業務プロセス改善ナビゲーターの基本操作をステップごとに解説します。<br>デモデータ「(株)KK精工 受注プロセス改善」を事例に紹介します。</p>
+  <a href="index.html" class="hero-back">&#8592; アプリに戻る</a>
+</div>
+
+<!-- ───────── TOC ───────── -->
+<div class="container">
+  <nav class="toc">
+    <h2>目次</h2>
+    <ul class="toc-list">
+      <li><a href="#overview"><span class="toc-num">1</span>全体の流れ</a></li>
+      <li><a href="#step0"><span class="toc-num">2</span>プロジェクトの作成</a></li>
+      <li><a href="#step1"><span class="toc-num">3</span>Step 1: 業務の洗い出し</a></li>
+      <li><a href="#step2"><span class="toc-num">4</span>Step 2: 問題点の分析</a></li>
+      <li><a href="#step3"><span class="toc-num">5</span>Step 3: ECRS改善選定</a></li>
+      <li><a href="#step4"><span class="toc-num">6</span>Step 4: 改善策の検討</a></li>
+      <li><a href="#step5"><span class="toc-num">7</span>Step 5: 効果検証</a></li>
+      <li><a href="#features"><span class="toc-num">8</span>便利な機能</a></li>
+    </ul>
+  </nav>
+
+  <!-- ═══════ 1. 全体の流れ ═══════ -->
+  <div class="section" id="overview">
+    <div class="section-header">
+      <span class="step-badge">1</span>
+      <h2>全体の流れ</h2>
+    </div>
+    <p>BPI Navigatorは、業務プロセス改善を<strong>5つのステップ</strong>で体系的に進めるツールです。各ステップは順番に進めていきます。</p>
+
+    <div class="ui-mock">
+      <div class="ui-mock-title">改善の5ステップ</div>
+      <div class="mock-flow">
+        <div class="mock-flow-step done">1</div>
+        <span class="mock-flow-arrow">→</span>
+        <div class="mock-flow-step done">2</div>
+        <span class="mock-flow-arrow">→</span>
+        <div class="mock-flow-step done">3</div>
+        <span class="mock-flow-arrow">→</span>
+        <div class="mock-flow-step active">4</div>
+        <span class="mock-flow-arrow">→</span>
+        <div class="mock-flow-step pending">5</div>
+      </div>
+      <table class="mock-table">
+        <tr><th>ステップ</th><th>内容</th><th>やること</th></tr>
+        <tr><td><strong>Step 1</strong></td><td>業務プロセスの洗い出し</td><td>現在の業務を「誰が・何を・どうやって・どのくらい」で棚卸し</td></tr>
+        <tr><td><strong>Step 2</strong></td><td>問題点の可視化と分析</td><td>各業務の問題を分類し、影響度をスコアリング</td></tr>
+        <tr><td><strong>Step 3</strong></td><td>ECRS改善対象の選定</td><td>排除・結合・交換・簡素化の4視点で改善候補を特定</td></tr>
+        <tr><td><strong>Step 4</strong></td><td>具体的な改善策の検討</td><td>改善候補ごとにアクションプランを策定</td></tr>
+        <tr><td><strong>Step 5</strong></td><td>効果検証と振り返り</td><td>改善前後を比較し、定量的に効果を確認</td></tr>
+      </table>
+    </div>
+
+    <div class="ui-mock">
+      <div class="ui-mock-title">画面構成</div>
+      <div class="mock-sidebar">
+        <div class="mock-sidebar-nav">
+          <div class="nav-item active"><span>☐</span> ダッシュボード</div>
+          <div style="color:#64748b;font-size:0.7rem;padding:8px 10px 4px;font-weight:600;">改善ステップ</div>
+          <div class="nav-item"><span class="num">1</span> 業務プロセスの洗い出し</div>
+          <div class="nav-item"><span class="num">2</span> 問題点の可視化と分析</div>
+          <div class="nav-item"><span class="num">3</span> ECRS改善対象の選定</div>
+          <div class="nav-item"><span class="num">4</span> 具体的な改善策の検討</div>
+          <div class="nav-item"><span class="num">5</span> 効果検証と振り返り</div>
+          <div style="color:#64748b;font-size:0.7rem;padding:8px 10px 4px;font-weight:600;">管理</div>
+          <div class="nav-item"><span>⚙</span> 設定・マスタ管理</div>
+        </div>
+        <div class="mock-sidebar-main">
+          <div style="color:#94a3b8;font-size:0.8rem;text-align:center;padding:30px 0;">← 左のサイドバーで<br>ステップを切り替え<br><br>右側にメインコンテンツが表示されます</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><strong>ポイント：</strong>ステップは順番に進めるのが基本ですが、サイドバーからいつでも好きなステップに戻れます。データは自動保存されるので安心してください。</div>
+    </div>
+  </div>
+
+  <!-- ═══════ 2. プロジェクトの作成 ═══════ -->
+  <div class="section" id="step0">
+    <div class="section-header">
+      <span class="step-badge green">2</span>
+      <h2>プロジェクトの作成</h2>
+    </div>
+    <p>改善活動を始める前に、まず<strong>企業</strong>と<strong>プロジェクト</strong>を作成します。</p>
+
+    <h3>デモデータで試す場合</h3>
+    <p>初回アクセス時、ダッシュボードに「デモデータを読み込む」ボタンが表示されます。</p>
+
+    <div class="ui-mock">
+      <div class="ui-mock-title">ダッシュボード（初期状態）</div>
+      <div style="text-align:center;padding:20px;">
+        <div style="font-size:2rem;margin-bottom:8px;">📋</div>
+        <div style="font-size:1rem;font-weight:600;color:#334155;">プロジェクトがありません</div>
+        <div style="font-size:0.85rem;color:#94a3b8;margin:8px 0 16px;">「新規プロジェクト作成」ボタンから始めましょう。</div>
+        <span class="mock-btn outline">🔧 デモデータを読み込む（(株)KK精工）</span>
+      </div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">📌</span>
+      <div>デモデータには<strong>受注プロセス改善</strong>（16業務、Step 5まで完了済み）と<strong>生産管理プロセス改善</strong>（16業務、Step 4まで）の2プロジェクトが含まれています。すぐに全ステップの動作を確認できます。</div>
+    </div>
+
+    <h3>新規に始める場合</h3>
+    <ol class="steps-list">
+      <li>ダッシュボードで<strong>「🏢 企業を登録」</strong>をクリックし、企業名と概要を入力します。<br><span style="color:#64748b;font-size:0.85rem;">例：(株)KK精工 / 工業用切削工具の製造業</span></li>
+      <li><strong>「新規プロジェクト作成」</strong>をクリックします。</li>
+      <li>プロジェクト名を入力し、対象企業を選択します。<br><span style="color:#64748b;font-size:0.85rem;">例：受注プロセス改善</span></li>
+      <li>対象のプロセス区分を選択します（受注、生産管理、製造など複数選択可）。</li>
+      <li>「作成」をクリックするとプロジェクトが作成され、Step 1に自動的に移動します。</li>
+    </ol>
+
+    <div class="ui-mock">
+      <div class="ui-mock-title">プロジェクト作成後のダッシュボード</div>
+      <div class="mock-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <strong style="font-size:0.95rem;">(株)KK精工</strong>
+          <span style="color:#94a3b8;font-size:0.8rem;">5件</span>
+        </div>
+        <div style="font-size:0.78rem;color:#64748b;margin:4px 0 10px;padding:8px;background:#f8fafc;border-left:3px solid #e2e8f0;border-radius:4px;">
+          工業用切削工具の製造業。従業員約80名。
+        </div>
+        <div class="mock-card" style="margin:4px 0;">
+          <div style="display:flex;justify-content:space-between;">
+            <strong style="font-size:0.85rem;">受注プロセス改善</strong>
+            <span style="font-size:0.75rem;color:#94a3b8;">💾 ✕</span>
+          </div>
+          <div style="font-size:0.78rem;color:#64748b;">登録業務: 16件 ／ 現在: Step 5</div>
+          <div class="mock-flow" style="justify-content:flex-start;padding:6px 0 0;">
+            <div class="mock-flow-step done" style="width:26px;height:26px;font-size:0.7rem;">1</div>
+            <div class="mock-flow-step done" style="width:26px;height:26px;font-size:0.7rem;">2</div>
+            <div class="mock-flow-step done" style="width:26px;height:26px;font-size:0.7rem;">3</div>
+            <div class="mock-flow-step done" style="width:26px;height:26px;font-size:0.7rem;">4</div>
+            <div class="mock-flow-step active" style="width:26px;height:26px;font-size:0.7rem;">5</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><strong>ポイント：</strong>1つの企業に対して複数のプロジェクトを作成できます。「受注プロセス」「生産管理プロセス」のように、業務領域ごとに分けて進めると管理しやすくなります。</div>
+    </div>
+  </div>
+
+  <!-- ═══════ 3. Step 1 ═══════ -->
+  <div class="section" id="step1">
+    <div class="section-header">
+      <span class="step-badge">Step 1</span>
+      <h2>業務プロセスの洗い出し</h2>
+    </div>
+    <p>現在行っている業務を一つずつ洗い出し、<strong>「誰が・何を・どうやって・どのくらい」</strong>の視点で棚卸しします。</p>
+
+    <h3>業務を追加する</h3>
+    <ol class="steps-list">
+      <li><strong>「業務を追加」</strong>ボタンをクリックします。</li>
+      <li>業務追加フォームに以下の情報を入力します：</li>
+    </ol>
+
+    <div class="ui-mock">
+      <div class="ui-mock-title">業務の入力項目</div>
+      <table class="mock-table">
+        <tr><th>項目</th><th>説明</th><th>入力例</th></tr>
+        <tr><td><strong>コード</strong></td><td>業務を識別するコード（自動採番可）</td><td>ORD-001</td></tr>
+        <tr><td><strong>プロセス区分</strong></td><td>業務が属するプロセス</td><td>受注</td></tr>
+        <tr><td><strong>作業内容</strong></td><td>具体的な業務の内容</td><td>顧客からの見積依頼受付（電話・FAX・メール）</td></tr>
+        <tr><td><strong>担当者</strong></td><td>誰がやるか</td><td>営業事務</td></tr>
+        <tr><td><strong>対象</strong></td><td>何を扱うか</td><td>見積依頼書</td></tr>
+        <tr><td><strong>方法</strong></td><td>どうやるか</td><td>FAX/電話/メールで受領し紙台帳に転記</td></tr>
+        <tr><td><strong>所要時間</strong></td><td>1回あたりの所要時間</td><td>20分</td></tr>
+        <tr><td><strong>頻度</strong></td><td>どのくらいの頻度か</td><td>日次5回</td></tr>
+        <tr><td><strong>ツール</strong></td><td>使用するツール・システム</td><td>FAX, 電話, Excel</td></tr>
+        <tr><td><strong>備考</strong></td><td>補足情報</td><td>FAXの場合が約6割。手書き記録が多い</td></tr>
+      </table>
+    </div>
+
+    <h3>CSVインポート</h3>
+    <p>Excelなどで作成した業務一覧をCSVファイルとして一括インポートすることもできます。<strong>「CSVインポート」</strong>ボタンをクリックし、列の対応を確認してインポートします。</p>
+
+    <h3>プロセス区分タブ</h3>
+    <p>業務はプロセス区分ごとにタブで切り替えて表示できます。「すべて」タブでは全業務が一覧表示されます。</p>
+
+    <div class="ui-mock">
+      <div class="ui-mock-title">業務一覧の例（(株)KK精工 受注プロセス）</div>
+      <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;">
+        <span class="mock-btn primary" style="font-size:0.75rem;">すべて (16)</span>
+        <span class="mock-btn outline" style="font-size:0.75rem;">受注 (16)</span>
+        <span class="mock-btn outline" style="font-size:0.75rem;">生産管理 (0)</span>
+        <span class="mock-btn outline" style="font-size:0.75rem;">製造 (0)</span>
+      </div>
+      <table class="mock-table">
+        <tr><th>No.</th><th>コード</th><th>作業内容</th><th>担当</th><th>時間</th><th>頻度</th></tr>
+        <tr><td>1</td><td>ORD-001</td><td>顧客からの見積依頼受付</td><td>営業事務</td><td>20分</td><td>日次5回</td></tr>
+        <tr><td>2</td><td>ORD-002</td><td>見積依頼内容の確認・工具仕様の精査</td><td>営業担当</td><td>25分</td><td>日次4回</td></tr>
+        <tr><td>3</td><td>ORD-003</td><td>見積書作成（標準品の価格計算）</td><td>営業担当</td><td>30分</td><td>日次3回</td></tr>
+      </table>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><strong>ポイント：</strong>最初は完璧を目指さなくて大丈夫です。「こんな業務もあった」と気づいたら、いつでも追加・修正できます。まずは主要な業務を網羅することを目指しましょう。</div>
+    </div>
+  </div>
+
+  <!-- ═══════ 4. Step 2 ═══════ -->
+  <div class="section" id="step2">
+    <div class="section-header">
+      <span class="step-badge purple">Step 2</span>
+      <h2>問題点の可視化と分析</h2>
+    </div>
+    <p>Step 1で洗い出した各業務に対して、<strong>問題カテゴリ</strong>の分類と<strong>影響度のスコアリング</strong>を行います。</p>
+
+    <h3>スコアリング</h3>
+    <p>「スコアリング」タブでは、各業務ごとに以下を設定します：</p>
+
+    <div class="ui-mock">
+      <div class="ui-mock-title">問題カテゴリ（複数選択可）</div>
+      <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px;">
+        <span class="mock-tag problem" style="background:#fee2e2;color:#dc2626;border-color:#fecaca;">転記ミス・二重入力</span>
+        <span class="mock-tag problem">待ち時間・遅延</span>
+        <span class="mock-tag problem">標準化不足</span>
+        <span class="mock-tag problem" style="background:#fee2e2;color:#dc2626;border-color:#fecaca;">紙・手作業</span>
+        <span class="mock-tag problem">属人化</span>
+        <span class="mock-tag problem">検索・探索</span>
+        <span class="mock-tag problem">コミュニケーション</span>
+        <span class="mock-tag problem">システム連携不足</span>
+      </div>
+      <div style="font-size:0.82rem;color:#64748b;">↑ 赤くなっているものが選択されたカテゴリです</div>
+    </div>
+
+    <div class="ui-mock">
+      <div class="ui-mock-title">影響度スコア（各1〜5段階）</div>
+      <table class="mock-table">
+        <tr><th>評価軸</th><th>1 (低い)</th><th>5 (高い)</th></tr>
+        <tr><td><strong>時間影響度</strong></td><td>ほとんど時間のムダなし</td><td>非常に大きな時間ロス</td></tr>
+        <tr><td><strong>品質影響度</strong></td><td>品質への影響なし</td><td>重大な品質問題につながる</td></tr>
+        <tr><td><strong>頻度</strong></td><td>まれにしか発生しない</td><td>毎日何度も発生</td></tr>
+        <tr><td><strong>改善容易度</strong></td><td>改善が非常に困難</td><td>すぐに改善できる</td></tr>
+      </table>
+      <div style="margin-top:10px;font-size:0.82rem;color:#64748b;">
+        <strong>優先度スコア</strong> = (時間影響度 + 品質影響度 + 頻度 + 改善容易度) ÷ 4<br>
+        スコアが高い業務ほど、改善の優先順位が高くなります。
+      </div>
+    </div>
+
+    <h3>分析ダッシュボード</h3>
+    <p>「分析ダッシュボード」タブに切り替えると、入力したデータを元に自動で4つのチャートが生成されます。</p>
+
+    <div class="ui-mock">
+      <div class="ui-mock-title">分析ダッシュボードの4つのチャート</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="mock-card">
+          <div style="font-weight:600;font-size:0.82rem;margin-bottom:6px;">📊 問題カテゴリ別パレート図</div>
+          <div style="font-size:0.78rem;color:#64748b;">問題の種類別件数を棒グラフ＋累積%で表示。上位の問題に集中して取り組むべきかがわかります。</div>
+        </div>
+        <div class="mock-card">
+          <div style="font-weight:600;font-size:0.82rem;margin-bottom:6px;">🗺️ ヒートマップ</div>
+          <div style="font-size:0.78rem;color:#64748b;">プロセス区分 × 問題カテゴリのマトリクス。問題が集中している領域が色の濃さでわかります。</div>
+        </div>
+        <div class="mock-card">
+          <div style="font-weight:600;font-size:0.82rem;margin-bottom:6px;">⏱️ 時間分析</div>
+          <div style="font-size:0.78rem;color:#64748b;">付加価値作業と非付加価値作業の時間比率を可視化。ムダな時間がどれだけあるかがわかります。</div>
+        </div>
+        <div class="mock-card">
+          <div style="font-weight:600;font-size:0.82rem;margin-bottom:6px;">🫧 バブルチャート</div>
+          <div style="font-size:0.78rem;color:#64748b;">改善効果 × 改善難易度のマトリクス。効果が大きく実施しやすい改善（右下）を優先します。</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><strong>ポイント：</strong>パレート図を見ると「上位2〜3カテゴリで問題の8割を占める」ことがよくあります（パレートの法則）。まずはそこに集中して改善を進めましょう。</div>
+    </div>
+  </div>
+
+  <!-- ═══════ 5. Step 3 ═══════ -->
+  <div class="section" id="step3">
+    <div class="section-header">
+      <span class="step-badge orange">Step 3</span>
+      <h2>ECRSによる改善対象の選定</h2>
+    </div>
+    <p>優先度スコアの高い業務から順に、<strong>ECRS</strong>の4つの視点で改善可能性を検討します。</p>
+
+    <div class="ui-mock">
+      <div class="ui-mock-title">ECRSとは</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;">
+        <div style="text-align:center;padding:12px 8px;">
+          <span class="mock-tag e" style="font-size:1rem;padding:6px 12px;">E</span>
+          <div style="font-weight:600;font-size:0.82rem;margin-top:8px;">排除</div>
+          <div style="font-size:0.75rem;color:#64748b;">Eliminate</div>
+          <div style="font-size:0.78rem;color:#475569;margin-top:4px;">その業務を<br>なくせないか？</div>
+        </div>
+        <div style="text-align:center;padding:12px 8px;">
+          <span class="mock-tag c" style="font-size:1rem;padding:6px 12px;">C</span>
+          <div style="font-weight:600;font-size:0.82rem;margin-top:8px;">結合</div>
+          <div style="font-size:0.75rem;color:#64748b;">Combine</div>
+          <div style="font-size:0.78rem;color:#475569;margin-top:4px;">他の業務と<br>まとめられないか？</div>
+        </div>
+        <div style="text-align:center;padding:12px 8px;">
+          <span class="mock-tag r" style="font-size:1rem;padding:6px 12px;">R</span>
+          <div style="font-weight:600;font-size:0.82rem;margin-top:8px;">交換</div>
+          <div style="font-size:0.75rem;color:#64748b;">Rearrange</div>
+          <div style="font-size:0.78rem;color:#475569;margin-top:4px;">順序や担当を<br>変えられないか？</div>
+        </div>
+        <div style="text-align:center;padding:12px 8px;">
+          <span class="mock-tag s" style="font-size:1rem;padding:6px 12px;">S</span>
+          <div style="font-weight:600;font-size:0.82rem;margin-top:8px;">簡素化</div>
+          <div style="font-size:0.75rem;color:#64748b;">Simplify</div>
+          <div style="font-size:0.78rem;color:#475569;margin-top:4px;">もっと簡単に<br>できないか？</div>
+        </div>
+      </div>
+    </div>
+
+    <h3>ECRSウィザード</h3>
+    <p>「ECRSウィザード」タブでは、各業務に対してE→C→R→Sの順に質問が表示されます。</p>
+
+    <ol class="steps-list">
+      <li>優先度スコアの高い業務が上から順に表示されます。</li>
+      <li>各ECRS項目について<strong>「はい（候補）」「いいえ」「要検討」</strong>のいずれかを選択します。</li>
+      <li>「はい」を選んだ業務は自動的に改善候補としてリストアップされます。</li>
+    </ol>
+
+    <div class="ui-mock">
+      <div class="ui-mock-title">ウィザードの画面例</div>
+      <div class="mock-card">
+        <strong>見積書作成（特殊形状工具の個別原価計算）</strong>
+        <div style="font-size:0.78rem;color:#64748b;margin:4px 0;">受注 / 営業担当 / 優先度: 4.55</div>
+        <div style="margin-top:12px;padding-left:12px;border-left:3px solid #dc2626;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+            <span class="mock-tag e" style="font-size:0.85rem;">E</span>
+            <strong style="font-size:0.88rem;">排除（Eliminate）</strong>
+          </div>
+          <div style="font-size:0.85rem;color:#475569;margin-bottom:8px;">この作業をなくしたら何が困りますか？</div>
+          <span class="mock-btn outline">はい（E候補）</span>
+          <span class="mock-btn red" style="font-size:0.78rem;">いいえ</span>
+          <span class="mock-btn outline">要検討</span>
+        </div>
+      </div>
+    </div>
+
+    <h3>改善候補一覧</h3>
+    <p>「改善候補一覧」タブでは、E/C/R/Sそれぞれで「はい」と判定された業務がグループ表示されます。各候補から直接<strong>「改善計画を作成」</strong>ボタンでStep 4の改善計画に進めます。</p>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><strong>ポイント：</strong>ECRSは<strong>E→C→R→Sの順で検討</strong>するのが鉄則です。まず「なくせないか？」から考え、それが無理なら「まとめられないか？」→「変えられないか？」→「簡単にできないか？」と進めます。</div>
+    </div>
+  </div>
+
+  <!-- ═══════ 6. Step 4 ═══════ -->
+  <div class="section" id="step4">
+    <div class="section-header">
+      <span class="step-badge teal">Step 4</span>
+      <h2>具体的な改善策の検討</h2>
+    </div>
+    <p>Step 3で特定した改善候補に対して、<strong>具体的なアクションプラン</strong>を作成します。</p>
+
+    <h3>改善計画を作成する</h3>
+    <ol class="steps-list">
+      <li>改善候補の<strong>「改善計画を作成」</strong>ボタンをクリックします。</li>
+      <li>改善計画フォームに以下を入力します：</li>
+    </ol>
+
+    <div class="ui-mock">
+      <div class="ui-mock-title">改善計画の入力項目</div>
+      <table class="mock-table">
+        <tr><th>項目</th><th>入力例</th></tr>
+        <tr><td><strong>改善内容</strong></td><td>Web見積依頼フォームの導入</td></tr>
+        <tr><td><strong>改善手段</strong></td><td>Googleフォーム+スプレッドシートで見積依頼を受付</td></tr>
+        <tr><td><strong>担当者</strong></td><td>営業部長</td></tr>
+        <tr><td><strong>リソース</strong></td><td>Google Workspace（既存）、設定工数 約8時間</td></tr>
+        <tr><td><strong>開始日・終了日</strong></td><td>2026-01-15 〜 2026-03-31</td></tr>
+        <tr><td><strong>定量的効果</strong></td><td>見積受付工数 月40時間→15時間（63%削減）</td></tr>
+        <tr><td><strong>定性的効果</strong></td><td>転記ミスゼロ化</td></tr>
+      </table>
+    </div>
+
+    <h3>ステータス管理</h3>
+    <p>各改善計画には<strong>「未着手」「進行中」「完了」</strong>のステータスを設定できます。</p>
+
+    <h3>ガントチャート</h3>
+    <p>「ガントチャート」タブでは、全改善計画のタイムラインが横棒グラフで一覧表示されます。スケジュールの重複や全体の進捗状況が一目でわかります。</p>
+
+    <div class="ui-mock">
+      <div class="ui-mock-title">改善計画一覧の例</div>
+      <div class="mock-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span class="mock-tag s">S</span>
+            <strong style="font-size:0.85rem;">顧客からの見積依頼受付</strong>
+          </div>
+          <span class="mock-btn green" style="font-size:0.72rem;padding:3px 10px;">完了</span>
+        </div>
+        <div style="font-size:0.82rem;color:#475569;margin-top:6px;">改善: Web見積依頼フォームの導入</div>
+        <div style="font-size:0.78rem;color:#64748b;">手段: Googleフォーム+スプレッドシートで見積依頼を受付</div>
+      </div>
+      <div class="mock-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span class="mock-tag e">E</span>
+            <strong style="font-size:0.85rem;">受注残管理・進捗確認</strong>
+          </div>
+          <span class="mock-btn green" style="font-size:0.72rem;padding:3px 10px;">完了</span>
+        </div>
+        <div style="font-size:0.82rem;color:#475569;margin-top:6px;">改善: Excel受注残台帳の廃止（基幹一本化）</div>
+      </div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">📌</span>
+      <div>改善計画には<strong>改善のヒント</strong>が自動で表示されます（例：「RPAによる自動転記」「マスタデータの一元管理」など）。参考にしてアクションプランを立てましょう。</div>
+    </div>
+  </div>
+
+  <!-- ═══════ 7. Step 5 ═══════ -->
+  <div class="section" id="step5">
+    <div class="section-header">
+      <span class="step-badge pink">Step 5</span>
+      <h2>効果検証と振り返り</h2>
+    </div>
+    <p>改善施策を実施した後、<strong>改善前後のデータを比較</strong>して定量的に効果を確認します。</p>
+
+    <h3>効果測定</h3>
+    <ol class="steps-list">
+      <li>「効果測定」タブで、完了済みの改善施策が表示されます。</li>
+      <li><strong>「測定データ編集」</strong>をクリックします。</li>
+      <li><strong>改善後の所要時間</strong>を入力します（改善前の時間は自動で表示されます）。</li>
+      <li>コメント欄に振り返りの所見を記入します。</li>
+    </ol>
+
+    <div class="ui-mock">
+      <div class="ui-mock-title">効果測定の例</div>
+      <div class="mock-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <strong>顧客からの見積依頼受付（電話・FAX・メール）</strong>
+        </div>
+        <div style="font-size:0.82rem;color:#64748b;margin:4px 0;">改善内容: Web見積依頼フォームの導入</div>
+        <div style="display:flex;align-items:center;gap:16px;margin:12px 0;">
+          <div style="text-align:center;">
+            <div style="font-size:1.6rem;font-weight:700;color:#dc2626;">20</div>
+            <div style="font-size:0.75rem;color:#64748b;">分（改善前）</div>
+          </div>
+          <div style="font-size:1.2rem;color:#94a3b8;">→</div>
+          <div style="text-align:center;">
+            <div style="font-size:1.6rem;font-weight:700;color:#059669;">8</div>
+            <div style="font-size:0.75rem;color:#64748b;">分（改善後）</div>
+          </div>
+          <div style="text-align:center;">
+            <span class="mock-btn green" style="font-size:0.85rem;padding:4px 12px;cursor:default;">-60%</span>
+          </div>
+        </div>
+        <div style="font-size:0.82rem;color:#475569;background:#f8fafc;padding:8px 12px;border-radius:8px;">
+          💬 顧客の一部は未だFAX希望。段階的にWeb移行を推進中
+        </div>
+      </div>
+    </div>
+
+    <h3>レポート出力</h3>
+    <p>「レポート」タブでは、プロジェクト全体の成果をサマリで確認し、2つの形式でエクスポートできます。</p>
+
+    <div class="ui-mock">
+      <div class="ui-mock-title">レポート機能</div>
+      <div class="mock-kpi-row">
+        <div class="mock-kpi"><div class="num">16</div><div class="label">総業務プロセス数</div></div>
+        <div class="mock-kpi"><div class="num">4</div><div class="label">改善対象件数</div></div>
+        <div class="mock-kpi"><div class="num">4</div><div class="label">改善完了件数</div></div>
+        <div class="mock-kpi"><div class="num" style="color:#059669;">42分</div><div class="label">削減時間合計</div></div>
+      </div>
+      <div style="display:flex;gap:12px;justify-content:center;margin-top:16px;">
+        <span class="mock-btn primary">🖨 印刷用レポートを生成</span>
+        <span class="mock-btn outline">📊 Excelエクスポート</span>
+      </div>
+    </div>
+
+    <div class="ui-mock">
+      <div class="ui-mock-title">印刷用レポート（全9ページ構成）</div>
+      <table class="mock-table">
+        <tr><th>ページ</th><th>内容</th></tr>
+        <tr><td>表紙</td><td>プロジェクト名、企業名、作成日</td></tr>
+        <tr><td>目次</td><td>全セクションの一覧</td></tr>
+        <tr><td>エグゼクティブサマリ</td><td>KPI、ECRS区分別件数、効果測定ハイライト</td></tr>
+        <tr><td>Step 1</td><td>プロセス区分別集計 + 業務一覧テーブル</td></tr>
+        <tr><td>Step 2</td><td>問題カテゴリ分布、パレート図、スコアランキング</td></tr>
+        <tr><td>Step 3</td><td>ECRS分析結果テーブル</td></tr>
+        <tr><td>Step 4</td><td>改善計画一覧、期待効果</td></tr>
+        <tr><td>Step 5</td><td>改善前後比較テーブル、削減率</td></tr>
+        <tr><td>付録</td><td>全業務プロセス詳細一覧</td></tr>
+      </table>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><strong>ポイント：</strong>レポートは経営層への報告資料としてそのまま使えるクオリティです。印刷用レポートはA4サイズに最適化され、ステップごとにページが分かれます。</div>
+    </div>
+  </div>
+
+  <!-- ═══════ 8. 便利な機能 ═══════ -->
+  <div class="section" id="features">
+    <div class="section-header">
+      <span class="step-badge gray">8</span>
+      <h2>便利な機能</h2>
+    </div>
+
+    <h3>データの保存と読込</h3>
+    <p>画面右上の<strong>「💾 保存」「📁 読込」</strong>メニューから操作します。</p>
+    <div class="ui-mock">
+      <div class="ui-mock-title">保存メニュー</div>
+      <table class="mock-table">
+        <tr><th>メニュー</th><th>説明</th></tr>
+        <tr><td><strong>全データ保存</strong></td><td>全企業・全プロジェクトをJSON形式で保存</td></tr>
+        <tr><td><strong>この企業を保存</strong></td><td>選択中の企業のプロジェクトだけを保存</td></tr>
+        <tr><td><strong>このプロジェクトを保存</strong></td><td>選択中のプロジェクトだけを保存</td></tr>
+      </table>
+    </div>
+    <div class="ui-mock">
+      <div class="ui-mock-title">読込メニュー</div>
+      <table class="mock-table">
+        <tr><th>メニュー</th><th>説明</th></tr>
+        <tr><td><strong>全データ読込（上書き）</strong></td><td>保存したJSONで全データを上書き復元</td></tr>
+        <tr><td><strong>プロジェクト読込（更新/追加）</strong></td><td>保存したJSONからプロジェクトを追加・更新（既存データは保持）</td></tr>
+      </table>
+    </div>
+
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div><strong>注意：</strong>データはブラウザのlocalStorageに保存されます。ブラウザのデータを消去するとデータが失われます。<strong>定期的にJSON保存でバックアップ</strong>を取ることをお勧めします。</div>
+    </div>
+
+    <h3>AIアシスト</h3>
+    <p>各ステップの<strong>「🤖 AIアシスト」</strong>ボタンをクリックすると、AIが現在のデータを分析してアドバイスを生成します。</p>
+
+    <ol class="steps-list">
+      <li>「設定・マスタ管理」画面で<strong>APIキー</strong>を設定します（Claude / OpenAI / Geminiに対応）。</li>
+      <li>各ステップの「AIアシスト」ボタンをクリックします。</li>
+      <li>ステップに応じたプロンプトがAIに送信され、改善提案が返ってきます。</li>
+    </ol>
+
+    <div class="ui-mock">
+      <div class="ui-mock-title">AIアシストの例</div>
+      <table class="mock-table">
+        <tr><th>ステップ</th><th>AIが支援する内容</th></tr>
+        <tr><td>Step 1</td><td>業務の洗い出し漏れの指摘、追加すべき業務の提案</td></tr>
+        <tr><td>Step 2</td><td>問題の深掘り分析、見落としている問題点の指摘</td></tr>
+        <tr><td>Step 3</td><td>ECRS判定の妥当性チェック、改善可能性の示唆</td></tr>
+        <tr><td>Step 4</td><td>具体的な改善手法の提案、ツール・サービスの推奨</td></tr>
+        <tr><td>Step 5</td><td>効果の評価、次の改善サイクルへの示唆</td></tr>
+      </table>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">📌</span>
+      <div>APIキーはブラウザのlocalStorageに保存され、サーバーには送信されません。すべての処理はブラウザ上で完結します。</div>
+    </div>
+
+    <h3>設定・マスタ管理</h3>
+    <p>サイドバーの「⚙ 設定・マスタ管理」から、以下の設定ができます：</p>
+    <ul style="padding-left:20px;">
+      <li style="margin:4px 0;"><strong>プロセス区分マスタ</strong> — 業務のプロセス区分を追加・編集・削除</li>
+      <li style="margin:4px 0;"><strong>AIアシスト設定</strong> — APIプロバイダーとAPIキーの設定</li>
+    </ul>
+  </div>
+
+  <!-- ───────── Footer ───────── -->
+  <div class="footer">
+    <a href="index.html" style="font-size:1rem;font-weight:600;">← アプリに戻る</a>
+    <p style="margin-top:12px;">BPI Navigator &mdash; 業務プロセス改善ナビゲーター</p>
+  </div>
+
+</div>
+
+</body>
+</html>

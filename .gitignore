@@ -12,3 +12,6 @@ Thumbs.db
 # Docs (not needed for deployment)
 *.docx
 *.pdf
+
+# Local Netlify folder
+.netlify
