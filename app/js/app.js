@@ -362,6 +362,7 @@
             <button class="btn-company-action btn-company-add-project" data-company="${escapeHtml(company)}" title="この企業にプロジェクトを追加">＋</button>
             <button class="btn-company-action btn-company-edit" data-company="${escapeHtml(company)}" title="企業情報を編集">✏️</button>
             <button class="btn-save-company" data-company="${escapeHtml(company)}" title="この企業のプロジェクトを保存">&#128190;</button>
+            <button class="btn-company-action btn-company-delete" data-company="${escapeHtml(company)}" title="この企業を削除">&#128465;</button>
           </div>
         </div>
         ${descHtml ? `<div class="company-header-info" data-company="${escapeHtml(company)}">${descHtml}</div>` : ''}
@@ -447,6 +448,22 @@
         };
         downloadJson(exportData, `bpi_company_${sanitizeFilename(company)}_${today()}.json`);
         showToast(`「${company}」の${companyProjects.length}件を保存しました`, 'success');
+      });
+    });
+
+    // 企業削除ボタン
+    list.querySelectorAll('.btn-company-delete').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const company = btn.dataset.company;
+        const count = appData.projects.filter(p => p.company === company).length;
+        if (!confirm(`「${company}」と関連する${count}件のプロジェクトをすべて削除しますか？`)) return;
+        appData.projects = appData.projects.filter(p => p.company !== company);
+        if (appData.companies) delete appData.companies[company];
+        appData.currentProjectId = null;
+        saveData(appData);
+        renderDashboard();
+        showToast(`「${company}」を削除しました`, 'success');
       });
     });
 

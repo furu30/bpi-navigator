@@ -759,6 +759,11 @@ input[readonly] { background: var(--bg); color: var(--text-secondary); }
   border-color: var(--primary);
   color: var(--primary);
 }
+.btn-company-delete:hover {
+  background: var(--danger-light, #FEE2E2);
+  border-color: var(--danger);
+  color: var(--danger);
+}
 .btn-company-add-project {
   font-size: 16px;
   font-weight: 700;
