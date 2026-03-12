@@ -94,6 +94,10 @@
     return data;
   }
 
+  // デモプレビュー状態管理（saveDataより先に宣言が必要）
+  let savedDataBeforeDemo = null;
+  let isDemoPreviewMode = false;
+
   function loadData() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
@@ -103,6 +107,8 @@
   }
 
   function saveData(data) {
+    // デモプレビュー中はlocalStorageに保存しない
+    if (isDemoPreviewMode) return;
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     } catch (e) { console.error('Save error:', e); alert('データの保存に失敗しました。'); }
@@ -495,6 +501,16 @@
   // ==========================================
   // Step 1: 業務プロセスの洗い出し
   // ==========================================
+
+  /** ムリ・ムダ・ムラ配列をタグHTMLに変換 */
+  function renderMmmTags(mmm) {
+    if (!mmm || !Array.isArray(mmm) || mmm.length === 0) return '<span style="color:var(--text-secondary)">-</span>';
+    return mmm.map(m => {
+      const cls = m === 'ムリ' ? 'mmm-tag-muri' : m === 'ムダ' ? 'mmm-tag-muda' : 'mmm-tag-mura';
+      return `<span class="mmm-tag ${cls}">${escapeHtml(m)}</span>`;
+    }).join(' ');
+  }
+
   let step1Filter = 'all';
 
   function renderStep1() {
@@ -558,7 +574,7 @@
         <td>${t.timeRequired || '-'} ${escapeHtml(t.timeUnit || '')}</td>
         <td>${escapeHtml(t.freqType || '')} ${t.freqCount || ''}回</td>
         <td>${escapeHtml(t.tools)}</td>
-        <td>${escapeHtml(t.notes)}</td>
+        <td>${renderMmmTags(t.mmm)}</td>
         <td class="actions">
           <button class="btn-move" onclick="window.BPI.moveTask('${t.id}','up')" title="上に移動" ${i === 0 ? 'disabled' : ''}>▲</button>
           <button class="btn-move" onclick="window.BPI.moveTask('${t.id}','down')" title="下に移動" ${i === tasks.length - 1 ? 'disabled' : ''}>▼</button>
@@ -640,7 +656,10 @@
       $('#taskFreqType').value = task.freqType || '日次';
       $('#taskFreqCount').value = task.freqCount || 1;
       $('#taskTools').value = task.tools || '';
-      $('#taskNotes').value = task.notes || '';
+      const mmm = task.mmm || [];
+      $('#taskMuri').checked = mmm.includes('ムリ');
+      $('#taskMuda').checked = mmm.includes('ムダ');
+      $('#taskMura').checked = mmm.includes('ムラ');
     } else {
       $('#modalTaskTitle').textContent = '業務タスクの追加';
       $('#taskCode').value = generateTaskCode(sel.value);
@@ -653,7 +672,9 @@
       $('#taskFreqType').value = '日次';
       $('#taskFreqCount').value = 1;
       $('#taskTools').value = '';
-      $('#taskNotes').value = '';
+      $('#taskMuri').checked = false;
+      $('#taskMuda').checked = false;
+      $('#taskMura').checked = false;
     }
 
     sel.addEventListener('change', () => {
@@ -685,7 +706,12 @@
       freqType: $('#taskFreqType').value,
       freqCount: $('#taskFreqCount').value,
       tools: $('#taskTools').value.trim(),
-      notes: $('#taskNotes').value.trim()
+      notes: '',
+      mmm: [
+        ...$('#taskMuri').checked ? ['ムリ'] : [],
+        ...$('#taskMuda').checked ? ['ムダ'] : [],
+        ...$('#taskMura').checked ? ['ムラ'] : []
+      ]
     };
 
     if (editingTaskId) {
@@ -796,7 +822,7 @@
       timeRequired: ['所要時間', '時間', 'time'],
       freqType: ['頻度', 'frequency'],
       tools: ['ツール', '使用ツール', 'tools', '書類'],
-      notes: ['備考', '問題点', '気づき', 'notes', 'メモ']
+      notes: ['備考', '問題点', '気づき', 'notes', 'メモ', 'ムリ・ムダ・ムラ', '3M']
     };
 
     headers.forEach((h, i) => {
@@ -827,10 +853,18 @@
         freqCount: '1',
         tools: mapping.tools !== undefined ? cols[mapping.tools] : '',
         notes: mapping.notes !== undefined ? cols[mapping.notes] : '',
+        mmm: [],
         scores: null,
         problems: [],
         ecrs: null
       };
+
+      // CSV備考欄からムリ・ムダ・ムラを解析
+      if (task.notes) {
+        const mmmValues = ['ムリ', 'ムダ', 'ムラ'];
+        const parsed = mmmValues.filter(v => task.notes.includes(v));
+        if (parsed.length > 0) { task.mmm = parsed; task.notes = ''; }
+      }
 
       if (!task.content) continue;
       task.code = generateTaskCode(task.category);
@@ -2283,11 +2317,11 @@
   }
 
   function xlTaskListSheet(wb, tasks) {
-    const header = ['コード', 'プロセス区分', '作業内容', '担当者', '対象', '方法', '所要時間', '単位', '頻度種別', '頻度回数', '月間時間（分）', 'ツール', '備考'];
+    const header = ['コード', 'プロセス区分', '作業内容', '担当者', '対象', '方法', '所要時間', '単位', '頻度種別', '頻度回数', '月間時間（分）', 'ツール', 'ムリ・ムダ・ムラ'];
     const rows = tasks.map(t => [
       t.code || '', t.category || '', t.content || '', t.person || '', t.target || '', t.method || '',
       t.timeRequired || '', t.timeUnit || '分', t.freqType || '', t.freqCount || '',
-      Math.round(calcMonthlyTime(t)), t.tools || '', t.notes || ''
+      Math.round(calcMonthlyTime(t)), t.tools || '', (t.mmm || []).join('・') || t.notes || ''
     ]);
     const ws = XLSX.utils.aoa_to_sheet([header, ...rows]);
     ws['!cols'] = [{ wch: 10 }, { wch: 12 }, { wch: 30 }, { wch: 10 }, { wch: 15 }, { wch: 20 }, { wch: 8 }, { wch: 5 }, { wch: 8 }, { wch: 6 }, { wch: 10 }, { wch: 15 }, { wch: 20 }];
@@ -2711,6 +2745,7 @@
         freqCount: item.freqCount || '1',
         tools: item.tools || '',
         notes: item.notes || '',
+        mmm: item.mmm || [],
         scores: null,
         problems: [],
         ecrs: null
@@ -3467,6 +3502,18 @@
     // --- ヘルパー関数 ---
     const allTasks = [...ord, ...pln, ...mfg, ...qc, ...shp];
     allTasks.forEach(t => { t.ecrs = null; });
+
+    // ムリ・ムダ・ムラをproblemsから自動分類
+    const mmmMap = {
+      waiting: ['ムリ', 'ムダ'], paper: ['ムダ'], duplicate: ['ムダ'],
+      communication: ['ムラ'], search: ['ムダ'], system: ['ムラ'],
+      nostandard: ['ムラ'], personal: ['ムリ']
+    };
+    allTasks.forEach(t => {
+      const set = new Set();
+      (t.problems || []).forEach(p => (mmmMap[p] || []).forEach(m => set.add(m)));
+      t.mmm = [...set];
+    });
     const byCode = (code) => { const t = allTasks.find(x => x.code === code); return t ? t.id : null; };
 
     // --- ECRS判定をタスクに適用 ---
@@ -3609,6 +3656,43 @@
   }
 
   // ==========================================
+  // デモデータプレビュー機能
+  // ==========================================
+  function toggleDemoPreview() {
+    if (isDemoPreviewMode) return;
+    // 現在のデータをメモリに退避（localStorageには触れない）
+    savedDataBeforeDemo = JSON.parse(JSON.stringify(appData));
+    isDemoPreviewMode = true;
+    // デモデータに切り替え（保存はしない）
+    appData = generateDemoData();
+    // UI更新
+    updateDemoPreviewUI(true);
+    navigate('dashboard');
+    showToast('デモデータ（(株)KK精工）をプレビュー中です', 'info');
+  }
+
+  function exitDemoPreview() {
+    if (!isDemoPreviewMode) return;
+    // 退避データを復元
+    appData = savedDataBeforeDemo;
+    savedDataBeforeDemo = null;
+    isDemoPreviewMode = false;
+    // UI更新
+    updateDemoPreviewUI(false);
+    navigate('dashboard');
+    showToast('元のデータに戻りました', 'success');
+  }
+
+  function updateDemoPreviewUI(isDemo) {
+    const navDemoPreview = $('#navDemoPreview');
+    const navDemoBack = $('#navDemoBack');
+    const demoBanner = $('#demoPreviewBanner');
+    if (navDemoPreview) navDemoPreview.style.display = isDemo ? 'none' : '';
+    if (navDemoBack) navDemoBack.style.display = isDemo ? '' : 'none';
+    if (demoBanner) demoBanner.style.display = isDemo ? '' : 'none';
+  }
+
+  // ==========================================
   // グローバルAPI（onclick用）
   // ==========================================
   window.BPI = {
@@ -3620,6 +3704,8 @@
     updateImpStatus: (taskId, ecrsKey, status) => updateImpStatus(taskId, ecrsKey, status),
     openMeasureModal: (taskId, ecrsKey) => openMeasureModal(taskId, ecrsKey),
     loadDemo: () => { appData = generateDemoData(); saveData(appData); location.reload(); },
+    toggleDemoPreview: () => toggleDemoPreview(),
+    exitDemoPreview: () => exitDemoPreview(),
     openAIAssist: (step) => openAIAssist(step),
     toggleAISelectAll: (checked) => toggleAISelectAll(checked),
     openCompanyModal: (name) => openCompanyModal(name),

@@ -2277,3 +2277,105 @@ input[readonly] { background: var(--bg); color: var(--text-secondary); }
   .pr-kpi-row { page-break-inside: avoid; }
   .pr-bar-chart { page-break-inside: avoid; }
 }
+
+/* ========== ムリ・ムダ・ムラ Tags ========== */
+.mmm-tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+.mmm-tag-muri {
+  background: #FEE2E2;
+  color: #991B1B;
+  border: 1px solid #FECACA;
+}
+.mmm-tag-muda {
+  background: #FEF3C7;
+  color: #92400E;
+  border: 1px solid #FDE68A;
+}
+.mmm-tag-mura {
+  background: #DBEAFE;
+  color: #1E40AF;
+  border: 1px solid #BFDBFE;
+}
+
+/* ムリ・ムダ・ムラ Checkboxes in Modal */
+.mmm-checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.mmm-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s;
+  border: 1px solid var(--border);
+}
+.mmm-checkbox:hover {
+  background: var(--bg-secondary);
+}
+.mmm-checkbox input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--primary);
+}
+.mmm-label {
+  font-weight: 700;
+  font-size: 14px;
+}
+.mmm-desc {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.mmm-muri .mmm-label { color: #991B1B; }
+.mmm-muda .mmm-label { color: #92400E; }
+.mmm-mura .mmm-label { color: #1E40AF; }
+
+/* ========== Demo Preview ========== */
+.demo-preview-banner {
+  background: linear-gradient(90deg, var(--info), #0E7490);
+  color: #fff;
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 600;
+  gap: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+  z-index: 10;
+}
+
+.demo-preview-banner .btn {
+  color: var(--info);
+  border-color: #fff;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.demo-preview-banner .btn:hover {
+  background: #E0F7FA;
+}
+
+#navDemoPreview .nav-icon,
+#navDemoBack .nav-icon {
+  font-size: 16px;
+}
+
+#navDemoBack {
+  background: rgba(8, 145, 178, 0.2);
+  border-left: 3px solid var(--info);
+}
+
+#navDemoBack:hover {
+  background: rgba(8, 145, 178, 0.35);
+}

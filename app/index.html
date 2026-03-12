@@ -44,6 +44,12 @@
           <span class="nav-icon">&#9881;</span>設定・マスタ管理
         </li>
         <li class="nav-separator"></li>
+        <li class="nav-item" id="navDemoPreview" onclick="window.BPI.toggleDemoPreview()">
+          <span class="nav-icon">&#128269;</span>デモデータ参照
+        </li>
+        <li class="nav-item" id="navDemoBack" style="display:none;" onclick="window.BPI.exitDemoPreview()">
+          <span class="nav-icon">&#8592;</span>元のデータに戻る
+        </li>
         <li class="nav-item" onclick="window.open('tutorial.html','_blank')">
           <span class="nav-icon">&#128214;</span>使い方ガイド
         </li>
@@ -86,6 +92,10 @@
         <div class="step-nav-inner" id="topbarSteps"></div>
       </div>
 
+      <div id="demoPreviewBanner" class="demo-preview-banner" style="display:none;">
+        <span>&#128269; デモデータ（(株)KK精工）をプレビュー中 &mdash; 閲覧専用</span>
+        <button class="btn btn-sm btn-outline" onclick="window.BPI.exitDemoPreview()" style="margin-left:12px;background:#fff;">&#8592; 元のデータに戻る</button>
+      </div>
       <div id="content-area">
         <!-- ダッシュボード -->
         <div class="view active" id="view-dashboard">
@@ -144,7 +154,7 @@
                   <th style="width:70px;">所要時間</th>
                   <th style="width:60px;">頻度</th>
                   <th style="width:100px;">ツール</th>
-                  <th style="width:120px;">備考</th>
+                  <th style="width:120px;">ムリ・ムダ・ムラ</th>
                   <th style="width:130px;">操作</th>
                 </tr>
               </thead>
@@ -483,8 +493,12 @@
           <input type="text" id="taskTools" placeholder="使用するシステム、ツール、帳票">
         </div>
         <div class="form-group">
-          <label>備考（問題点・気づき）</label>
-          <textarea id="taskNotes" rows="2" placeholder="現場で感じている課題や気づき"></textarea>
+          <label>ムリ・ムダ・ムラ分類</label>
+          <div class="mmm-checkbox-group">
+            <label class="mmm-checkbox mmm-muri"><input type="checkbox" id="taskMuri" value="ムリ"><span class="mmm-label">ムリ</span><span class="mmm-desc">（過負荷・無理な作業）</span></label>
+            <label class="mmm-checkbox mmm-muda"><input type="checkbox" id="taskMuda" value="ムダ"><span class="mmm-label">ムダ</span><span class="mmm-desc">（無駄・付加価値なし）</span></label>
+            <label class="mmm-checkbox mmm-mura"><input type="checkbox" id="taskMura" value="ムラ"><span class="mmm-label">ムラ</span><span class="mmm-desc">（ばらつき・不均一）</span></label>
+          </div>
         </div>
       </div>
       <div class="modal-footer">
