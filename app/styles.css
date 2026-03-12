@@ -874,15 +874,19 @@ input[readonly] { background: var(--bg); color: var(--text-secondary); }
 .card-actions button {
   background: none;
   border: none;
-  color: var(--text-light);
+  color: var(--text-secondary);
   cursor: pointer;
   font-size: 15px;
-  padding: 4px;
+  padding: 4px 6px;
   border-radius: 4px;
   line-height: 1;
+  opacity: 0.7;
+  transition: opacity 0.15s, color 0.15s, background 0.15s;
 }
+.card-actions button:hover { opacity: 1; }
 .card-actions .btn-save-proj:hover { color: var(--primary); background: var(--primary-light); }
-.card-actions .delete-btn:hover { color: var(--danger); background: var(--danger-light); }
+.card-actions .delete-btn { color: var(--text-light); }
+.card-actions .delete-btn:hover { color: #fff; background: var(--danger); opacity: 1; }
 
 /* 企業ヘッダーの保存ボタン */
 .btn-save-company {

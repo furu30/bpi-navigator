@@ -3312,14 +3312,32 @@
     showToast(`「${proj.name}」を保存しました`, 'success');
   }
 
-  /** 全データ読込（上書き） */
+  /** 全データ読込（既存に追加） */
   function fileLoadAll() {
     readJsonFile('#loadFileInput', (imported, filename) => {
       if (imported.projects) {
-        appData = migrateData(imported);
+        const migrated = migrateData(imported);
+        // 企業情報をマージ
+        if (migrated.companies) {
+          if (!appData.companies) appData.companies = {};
+          Object.assign(appData.companies, migrated.companies);
+        }
+        // プロセスカテゴリをマージ
+        if (migrated.processCategories) {
+          migrated.processCategories.forEach(cat => {
+            if (!appData.processCategories.includes(cat)) appData.processCategories.push(cat);
+          });
+        }
+        // プロジェクトを追加（同一IDは上書き、それ以外は追加）
+        let updated = 0, added = 0;
+        migrated.projects.forEach(proj => {
+          const idx = appData.projects.findIndex(p => p.id === proj.id);
+          if (idx >= 0) { appData.projects[idx] = proj; updated++; }
+          else { appData.projects.push(proj); added++; }
+        });
         saveData(appData);
-        showToast(`${filename} を読み込みました（全データ上書き）`, 'success');
-        location.reload();
+        showToast(`${filename} を読み込みました（追加${added}件・更新${updated}件）`, 'success');
+        navigate('dashboard');
       } else {
         showToast('無効なデータ形式です。全データ形式のJSONを選択してください', 'error');
       }
@@ -3719,17 +3737,6 @@
   // ==========================================
   function init() {
     initEventListeners();
-
-    // デモデータ読込ボタン
-    const btnDemo = $('#btnLoadDemo');
-    if (btnDemo) {
-      btnDemo.addEventListener('click', () => {
-        appData = generateDemoData();
-        saveData(appData);
-        showToast('デモデータ（(株)KK精工）を読み込みました', 'success');
-        navigate('dashboard');
-      });
-    }
 
     // 保存されたプロジェクトがある場合
     if (appData.currentProjectId) {
