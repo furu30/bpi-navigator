@@ -2349,6 +2349,55 @@ input[readonly] { background: var(--bg); color: var(--text-secondary); }
 .mmm-muda .mmm-label { color: #92400E; }
 .mmm-mura .mmm-label { color: #1E40AF; }
 
+/* ムリ・ムダ・ムラ Detail Input in Modal */
+.mmm-item {
+  display: flex;
+  flex-direction: column;
+}
+.mmm-detail-input {
+  margin: 4px 0 0 32px;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 36px;
+  transition: border-color 0.2s;
+}
+.mmm-detail-input:focus {
+  border-color: var(--primary);
+  outline: none;
+  box-shadow: 0 0 0 2px var(--primary-light);
+}
+.mmm-detail-input::placeholder {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+/* ムリ・ムダ・ムラ Tag Row with Detail Text (table display) */
+.mmm-tag-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+.mmm-tag-row:last-child {
+  margin-bottom: 0;
+}
+.mmm-detail-text {
+  font-size: 11px;
+  color: var(--text);
+  line-height: 1.5;
+  padding-top: 2px;
+  word-break: break-word;
+}
+/* ムリ・ムダ・ムラ列の最小幅 */
+.data-table td:nth-last-child(2),
+.data-table th:nth-last-child(2) {
+  min-width: 220px;
+}
+
 /* ========== Demo Preview ========== */
 .demo-preview-banner {
   background: linear-gradient(90deg, var(--info), #0E7490);

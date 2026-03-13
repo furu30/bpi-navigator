@@ -519,13 +519,16 @@
   // Step 1: 業務プロセスの洗い出し
   // ==========================================
 
-  /** ムリ・ムダ・ムラ配列をタグHTMLに変換 */
-  function renderMmmTags(mmm) {
+  /** ムリ・ムダ・ムラ配列をタグHTMLに変換（内容テキスト付き） */
+  function renderMmmTags(mmm, mmmDetails) {
     if (!mmm || !Array.isArray(mmm) || mmm.length === 0) return '<span style="color:var(--text-secondary)">-</span>';
+    const details = mmmDetails || {};
     return mmm.map(m => {
       const cls = m === 'ムリ' ? 'mmm-tag-muri' : m === 'ムダ' ? 'mmm-tag-muda' : 'mmm-tag-mura';
-      return `<span class="mmm-tag ${cls}">${escapeHtml(m)}</span>`;
-    }).join(' ');
+      const key = m === 'ムリ' ? 'muri' : m === 'ムダ' ? 'muda' : 'mura';
+      const detailText = details[key] ? `<span class="mmm-detail-text">${escapeHtml(details[key])}</span>` : '';
+      return `<div class="mmm-tag-row"><span class="mmm-tag ${cls}">${escapeHtml(m)}</span>${detailText}</div>`;
+    }).join('');
   }
 
   let step1Filter = 'all';
@@ -591,7 +594,7 @@
         <td>${t.timeRequired || '-'} ${escapeHtml(t.timeUnit || '')}</td>
         <td>${escapeHtml(t.freqType || '')} ${t.freqCount || ''}回</td>
         <td>${escapeHtml(t.tools)}</td>
-        <td>${renderMmmTags(t.mmm)}</td>
+        <td>${renderMmmTags(t.mmm, t.mmmDetails)}</td>
         <td class="actions">
           <button class="btn-move" onclick="window.BPI.moveTask('${t.id}','up')" title="上に移動" ${i === 0 ? 'disabled' : ''}>▲</button>
           <button class="btn-move" onclick="window.BPI.moveTask('${t.id}','down')" title="下に移動" ${i === tasks.length - 1 ? 'disabled' : ''}>▼</button>
@@ -674,9 +677,16 @@
       $('#taskFreqCount').value = task.freqCount || 1;
       $('#taskTools').value = task.tools || '';
       const mmm = task.mmm || [];
+      const mmmD = task.mmmDetails || {};
       $('#taskMuri').checked = mmm.includes('ムリ');
       $('#taskMuda').checked = mmm.includes('ムダ');
       $('#taskMura').checked = mmm.includes('ムラ');
+      $('#taskMuriDetail').value = mmmD.muri || '';
+      $('#taskMudaDetail').value = mmmD.muda || '';
+      $('#taskMuraDetail').value = mmmD.mura || '';
+      $('#taskMuriDetail').style.display = mmm.includes('ムリ') ? 'block' : 'none';
+      $('#taskMudaDetail').style.display = mmm.includes('ムダ') ? 'block' : 'none';
+      $('#taskMuraDetail').style.display = mmm.includes('ムラ') ? 'block' : 'none';
     } else {
       $('#modalTaskTitle').textContent = '業務タスクの追加';
       $('#taskCode').value = generateTaskCode(sel.value);
@@ -692,6 +702,12 @@
       $('#taskMuri').checked = false;
       $('#taskMuda').checked = false;
       $('#taskMura').checked = false;
+      $('#taskMuriDetail').value = '';
+      $('#taskMudaDetail').value = '';
+      $('#taskMuraDetail').value = '';
+      $('#taskMuriDetail').style.display = 'none';
+      $('#taskMudaDetail').style.display = 'none';
+      $('#taskMuraDetail').style.display = 'none';
     }
 
     sel.addEventListener('change', () => {
@@ -728,7 +744,12 @@
         ...$('#taskMuri').checked ? ['ムリ'] : [],
         ...$('#taskMuda').checked ? ['ムダ'] : [],
         ...$('#taskMura').checked ? ['ムラ'] : []
-      ]
+      ],
+      mmmDetails: {
+        muri: $('#taskMuri').checked ? $('#taskMuriDetail').value.trim() : '',
+        muda: $('#taskMuda').checked ? $('#taskMudaDetail').value.trim() : '',
+        mura: $('#taskMura').checked ? $('#taskMuraDetail').value.trim() : ''
+      }
     };
 
     if (editingTaskId) {
@@ -2334,14 +2355,21 @@
   }
 
   function xlTaskListSheet(wb, tasks) {
-    const header = ['コード', 'プロセス区分', '作業内容', '担当者', '対象', '方法', '所要時間', '単位', '頻度種別', '頻度回数', '月間時間（分）', 'ツール', 'ムリ・ムダ・ムラ'];
-    const rows = tasks.map(t => [
-      t.code || '', t.category || '', t.content || '', t.person || '', t.target || '', t.method || '',
-      t.timeRequired || '', t.timeUnit || '分', t.freqType || '', t.freqCount || '',
-      Math.round(calcMonthlyTime(t)), t.tools || '', (t.mmm || []).join('・') || t.notes || ''
-    ]);
+    const header = ['コード', 'プロセス区分', '作業内容', '担当者', '対象', '方法', '所要時間', '単位', '頻度種別', '頻度回数', '月間時間（分）', 'ツール', 'ムリ・ムダ・ムラ', '3M内容'];
+    const rows = tasks.map(t => {
+      const d = t.mmmDetails || {};
+      const mmmText = (t.mmm || []).map(m => {
+        const key = m === 'ムリ' ? 'muri' : m === 'ムダ' ? 'muda' : 'mura';
+        return d[key] ? `【${m}】${d[key]}` : m;
+      }).join('　');
+      return [
+        t.code || '', t.category || '', t.content || '', t.person || '', t.target || '', t.method || '',
+        t.timeRequired || '', t.timeUnit || '分', t.freqType || '', t.freqCount || '',
+        Math.round(calcMonthlyTime(t)), t.tools || '', (t.mmm || []).join('・') || '', mmmText
+      ];
+    });
     const ws = XLSX.utils.aoa_to_sheet([header, ...rows]);
-    ws['!cols'] = [{ wch: 10 }, { wch: 12 }, { wch: 30 }, { wch: 10 }, { wch: 15 }, { wch: 20 }, { wch: 8 }, { wch: 5 }, { wch: 8 }, { wch: 6 }, { wch: 10 }, { wch: 15 }, { wch: 20 }];
+    ws['!cols'] = [{ wch: 10 }, { wch: 12 }, { wch: 30 }, { wch: 10 }, { wch: 15 }, { wch: 20 }, { wch: 8 }, { wch: 5 }, { wch: 8 }, { wch: 6 }, { wch: 10 }, { wch: 15 }, { wch: 15 }, { wch: 40 }];
     XLSX.utils.book_append_sheet(wb, ws, '業務一覧');
   }
 
@@ -3538,16 +3566,104 @@
     const allTasks = [...ord, ...pln, ...mfg, ...qc, ...shp];
     allTasks.forEach(t => { t.ecrs = null; });
 
-    // ムリ・ムダ・ムラをproblemsから自動分類
-    const mmmMap = {
-      waiting: ['ムリ', 'ムダ'], paper: ['ムダ'], duplicate: ['ムダ'],
-      communication: ['ムラ'], search: ['ムダ'], system: ['ムラ'],
-      nostandard: ['ムラ'], personal: ['ムリ']
+    // ムリ・ムダ・ムラを各タスクに個別割当（最大1つ、なしもあり）
+    const mmmAssign = {
+      // 受注プロセス
+      'ORD-001': { type: 'ムダ', detail: 'FAX・紙台帳への転記が発生し、同じ情報を二重入力している' },
+      'ORD-002': null,
+      'ORD-003': { type: 'ムダ', detail: '価格表が複数ファイルに分散しており、検索に時間がかかる' },
+      'ORD-004': { type: 'ムリ', detail: 'ベテラン営業しか精度高く積算できず、特定担当者に負荷が集中' },
+      'ORD-005': { type: 'ムダ', detail: '上長不在時に承認待ちが発生し、半日〜1日の遅延が生じる' },
+      'ORD-006': null,
+      'ORD-007': { type: 'ムダ', detail: '見積書と注文書の照合が手作業で、仕様差異の見落としが発生' },
+      'ORD-008': { type: 'ムダ', detail: '紙の注文書を見て基幹システムに手入力しており、転記ミスが月2件発生' },
+      'ORD-009': { type: 'ムリ', detail: '生産管理の回答待ち時間が平均2時間あり、顧客への即時回答ができない' },
+      'ORD-010': null,
+      'ORD-011': { type: 'ムダ', detail: '基幹システムとExcelの二重管理により、データ不整合が発生' },
+      'ORD-012': { type: 'ムラ', detail: '変更情報の伝達方法が属人的で、関係部門への展開漏れが発生' },
+      'ORD-013': null,
+      'ORD-014': { type: 'ムラ', detail: '初動対応の手順が標準化されておらず、対応品質にばらつきがある' },
+      'ORD-015': { type: 'ムダ', detail: 'マスタ更新が手入力のため不備が残り、請求書送付先ミスにつながる' },
+      'ORD-016': { type: 'ムダ', detail: 'リピート品の過去履歴検索に時間がかかり非効率' },
+      // 生産管理プロセス
+      'PLN-001': { type: 'ムラ', detail: '在庫引当の判断基準が属人的で、担当者により判断が異なる' },
+      'PLN-002': { type: 'ムリ', detail: '計画立案が担当者の経験と勘に依存し、不在時に業務が止まる' },
+      'PLN-003': { type: 'ムリ', detail: '機械別スケジュール作成が属人的で、急ぎ注文での計画変更が頻発' },
+      'PLN-004': { type: 'ムダ', detail: '図面との紐づけが手作業で、紛失リスクがある' },
+      'PLN-005': { type: 'ムダ', detail: '紙の指示書・図面を印刷配布しており、旧版での加工ミスが年2回発生' },
+      'PLN-006': { type: 'ムダ', detail: '現場巡回での口頭確認と紙日報の回収に時間がかかる' },
+      'PLN-007': null,
+      'PLN-008': { type: 'ムラ', detail: '遅延リスクの検知タイミングにばらつきがあり、事後対応になりがち' },
+      'PLN-009': { type: 'ムリ', detail: '特急品が入るたびに全体計画の見直しが必要で、担当者の負荷が大きい' },
+      'PLN-010': { type: 'ムダ', detail: '倉庫を目視確認し手書き台帳に記入しており、数量差異が頻発' },
+      'PLN-011': { type: 'ムラ', detail: '口頭やメモでの依頼のため、発注漏れが月1回程度発生' },
+      'PLN-012': null,
+      'PLN-013': { type: 'ムラ', detail: '報告フォーマットが統一されておらず、データ比較が困難' },
+      'PLN-014': null,
+      'PLN-015': { type: 'ムダ', detail: '部品表と在庫データの突合が手作業で時間がかかる' },
+      'PLN-016': { type: 'ムリ', detail: '複数拠点の計画同期が一人の担当者に依存している' },
+      // 製造プロセス
+      'MFG-001': null,
+      'MFG-002': { type: 'ムダ', detail: '段取り手順が文書化されておらず、準備時間にばらつきがある' },
+      'MFG-003': null,
+      'MFG-004': { type: 'ムラ', detail: 'オペレーターの経験により加工品質にばらつきが出る' },
+      'MFG-005': { type: 'ムダ', detail: '手書き日報の転記作業に1日30分以上かかっている' },
+      'MFG-006': { type: 'ムリ', detail: '1台のNC旋盤に作業が集中し、故障時に生産が完全に停止する' },
+      'MFG-007': null,
+      'MFG-008': { type: 'ムダ', detail: '不良発生時の原因調査に時間がかかり、再発防止が遅れる' },
+      'MFG-009': { type: 'ムラ', detail: '熟練者と新人で段取り時間に2倍以上の差がある' },
+      'MFG-010': null,
+      'MFG-011': { type: 'ムリ', detail: '研削工程のスキルを持つ作業者が2名しかおらず、休暇調整が困難' },
+      'MFG-012': { type: 'ムダ', detail: '工具の消耗確認を目視で行っており、交換タイミングの判断が遅れる' },
+      'MFG-013': null,
+      'MFG-014': { type: 'ムラ', detail: 'クーラント管理の基準が曖昧で、加工面品質にばらつきが出る' },
+      'MFG-015': { type: 'ムダ', detail: '紙図面の最新版確認に手間がかかり、旧版使用のリスクがある' },
+      'MFG-016': null,
+      'MFG-017': { type: 'ムラ', detail: '担当者ごとに清掃の基準が異なり、設備状態にムラがある' },
+      // 品質管理プロセス
+      'QC-001': { type: 'ムダ', detail: '紙の検査記録への手書き転記が発生し、データ活用が困難' },
+      'QC-002': null,
+      'QC-003': { type: 'ムラ', detail: '検査員によって測定値の判定にばらつきがある' },
+      'QC-004': { type: 'ムダ', detail: '検査データのExcel手入力に時間がかかり、集計が遅れる' },
+      'QC-005': null,
+      'QC-006': { type: 'ムリ', detail: '顧客監査対応が品質管理責任者一人に集中し、通常業務が停滞' },
+      'QC-007': { type: 'ムラ', detail: '不適合の判定基準が明文化されておらず、担当者により判断が異なる' },
+      'QC-008': null,
+      'QC-009': { type: 'ムダ', detail: '計測器の校正管理台帳が紙で、期限管理の見落としリスクがある' },
+      'QC-010': { type: 'ムラ', detail: '初品検査の手順が標準化されておらず、確認項目に漏れが発生' },
+      'QC-011': null,
+      'QC-012': null,
+      'QC-013': { type: 'ムラ', detail: 'QC工程表の改訂管理が不十分で、最新版と旧版が混在' },
+      'QC-014': { type: 'ムダ', detail: 'Cp/Cpk計算が手作業のExcelで非効率、データ蓄積も不十分' },
+      'QC-015': { type: 'ムダ', detail: '紙ファイルでの保管でスペース不足、過去記録の検索に時間がかかる' },
+      'QC-016': { type: 'ムラ', detail: '仕入先の評価基準が明文化されておらず、評価結果にばらつきがある' },
+      // 出荷プロセス
+      'SHP-001': { type: 'ムダ', detail: '紙の出荷指示書の記載ミスが月2回発生し、確認の手戻りが生じる' },
+      'SHP-002': { type: 'ムダ', detail: '棚番が分かりにくく製品を探す時間が発生している' },
+      'SHP-003': null,
+      'SHP-004': { type: 'ムラ', detail: '梱包方法が担当者により異なり、破損クレームが年3件発生' },
+      'SHP-005': { type: 'ムダ', detail: '基幹システムと送り状ソフトが未連携で、同じデータを二重入力している' },
+      'SHP-006': null,
+      'SHP-007': { type: 'ムダ', detail: '出荷実績の入力忘れにより在庫数に差異が発生することがある' },
+      'SHP-008': { type: 'ムラ', detail: '出荷案内の連絡方法が統一されておらず、連絡漏れが発生' },
+      'SHP-009': { type: 'ムダ', detail: '紙の納品書控えの保管スペースが不足し、検索にも時間がかかる' },
+      'SHP-010': null,
+      'SHP-011': { type: 'ムラ', detail: '返品受入の処理手順が標準化されておらず、分析もできていない' },
+      'SHP-012': { type: 'ムダ', detail: '月次集計がExcel手作業で、データ抽出と加工に時間がかかる' },
+      'SHP-013': null,
+      'SHP-014': { type: 'ムリ', detail: 'HSコード確認や通関書類作成が特定担当者に依存し、ミス時の影響が大きい' },
+      'SHP-015': { type: 'ムリ', detail: '特急出荷の割込みで通常出荷が遅延し、担当者に過度な負荷がかかる' }
     };
     allTasks.forEach(t => {
-      const set = new Set();
-      (t.problems || []).forEach(p => (mmmMap[p] || []).forEach(m => set.add(m)));
-      t.mmm = [...set];
+      const assign = mmmAssign[t.code] || null;
+      if (assign) {
+        t.mmm = [assign.type];
+        const key = assign.type === 'ムリ' ? 'muri' : assign.type === 'ムダ' ? 'muda' : 'mura';
+        t.mmmDetails = { muri: '', muda: '', mura: '', [key]: assign.detail };
+      } else {
+        t.mmm = [];
+        t.mmmDetails = { muri: '', muda: '', mura: '' };
+      }
     });
     const byCode = (code) => { const t = allTasks.find(x => x.code === code); return t ? t.id : null; };
 

@@ -494,9 +494,18 @@
         <div class="form-group">
           <label>ムリ・ムダ・ムラ分類</label>
           <div class="mmm-checkbox-group">
-            <label class="mmm-checkbox mmm-muri"><input type="checkbox" id="taskMuri" value="ムリ"><span class="mmm-label">ムリ</span><span class="mmm-desc">（過負荷・無理な作業）</span></label>
-            <label class="mmm-checkbox mmm-muda"><input type="checkbox" id="taskMuda" value="ムダ"><span class="mmm-label">ムダ</span><span class="mmm-desc">（無駄・付加価値なし）</span></label>
-            <label class="mmm-checkbox mmm-mura"><input type="checkbox" id="taskMura" value="ムラ"><span class="mmm-label">ムラ</span><span class="mmm-desc">（ばらつき・不均一）</span></label>
+            <div class="mmm-item">
+              <label class="mmm-checkbox mmm-muri"><input type="checkbox" id="taskMuri" value="ムリ" onchange="document.getElementById('taskMuriDetail').style.display=this.checked?'block':'none'"><span class="mmm-label">ムリ</span><span class="mmm-desc">（過負荷・無理な作業）</span></label>
+              <textarea id="taskMuriDetail" class="mmm-detail-input" style="display:none" placeholder="具体的なムリの内容を記入（例：残業前提のスケジュール、一人に集中する作業負荷）" rows="2"></textarea>
+            </div>
+            <div class="mmm-item">
+              <label class="mmm-checkbox mmm-muda"><input type="checkbox" id="taskMuda" value="ムダ" onchange="document.getElementById('taskMudaDetail').style.display=this.checked?'block':'none'"><span class="mmm-label">ムダ</span><span class="mmm-desc">（無駄・付加価値なし）</span></label>
+              <textarea id="taskMudaDetail" class="mmm-detail-input" style="display:none" placeholder="具体的なムダの内容を記入（例：同じデータの二重入力、使われない帳票の作成）" rows="2"></textarea>
+            </div>
+            <div class="mmm-item">
+              <label class="mmm-checkbox mmm-mura"><input type="checkbox" id="taskMura" value="ムラ" onchange="document.getElementById('taskMuraDetail').style.display=this.checked?'block':'none'"><span class="mmm-label">ムラ</span><span class="mmm-desc">（ばらつき・不均一）</span></label>
+              <textarea id="taskMuraDetail" class="mmm-detail-input" style="display:none" placeholder="具体的なムラの内容を記入（例：担当者により品質がばらつく、繁閑差が大きい）" rows="2"></textarea>
+            </div>
           </div>
         </div>
       </div>
