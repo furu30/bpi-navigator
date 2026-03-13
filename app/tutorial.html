@@ -498,6 +498,8 @@
           <div class="nav-item"><span class="num">3</span> ECRS改善対象の選定</div>
           <div class="nav-item"><span class="num">4</span> 具体的な改善策の検討</div>
           <div class="nav-item"><span class="num">5</span> 効果検証と振り返り</div>
+          <div style="color:#64748b;font-size:0.7rem;padding:8px 10px 4px;font-weight:600;">ツール</div>
+          <div class="nav-item"><span>🔍</span> デモデータ参照</div>
           <div style="color:#64748b;font-size:0.7rem;padding:8px 10px 4px;font-weight:600;">管理</div>
           <div class="nav-item"><span>⚙</span> 設定・マスタ管理</div>
         </div>
@@ -522,21 +524,21 @@
     <p>改善活動を始める前に、まず<strong>企業</strong>と<strong>プロジェクト</strong>を作成します。</p>
 
     <h3>デモデータで試す場合</h3>
-    <p>初回アクセス時、ダッシュボードに「デモデータを読み込む」ボタンが表示されます。</p>
+    <p>サイドバーの<strong>「🔍 デモデータ参照」</strong>をクリックすると、サンプルデータをプレビューできます。プレビュー中はデータが一時的に切り替わり、元のデータには影響しません。</p>
 
     <div class="ui-mock">
       <div class="ui-mock-title">ダッシュボード（初期状態）</div>
       <div style="text-align:center;padding:20px;">
         <div style="font-size:2rem;margin-bottom:8px;">📋</div>
         <div style="font-size:1rem;font-weight:600;color:#334155;">プロジェクトがありません</div>
-        <div style="font-size:0.85rem;color:#94a3b8;margin:8px 0 16px;">「新規プロジェクト作成」ボタンから始めましょう。</div>
-        <span class="mock-btn outline">🔧 デモデータを読み込む（(株)KK精工）</span>
+        <div style="font-size:0.85rem;color:#94a3b8;margin:8px 0 16px;">「新規プロジェクト作成」ボタンから始めましょう。<br>左メニューの「デモデータ参照」でサンプルを確認できます。</div>
+        <span class="mock-btn outline">📖 使い方ガイド</span>
       </div>
     </div>
 
     <div class="callout info">
       <span class="callout-icon">📌</span>
-      <div>デモデータには<strong>受注プロセス改善</strong>（16業務、Step 5まで完了済み）と<strong>生産管理プロセス改善</strong>（16業務、Step 4まで）の2プロジェクトが含まれています。すぐに全ステップの動作を確認できます。</div>
+      <div>デモデータには<strong>受注プロセス改善</strong>（16業務、Step 5まで完了済み）と<strong>生産管理プロセス改善</strong>（16業務、Step 4まで）の2プロジェクトが含まれています。<br>プレビューモード中は画面上部にバナーが表示され、<strong>「← 元のデータに戻る」</strong>をクリックするといつでも自分のデータに戻れます。</div>
     </div>
 
     <h3>新規に始める場合</h3>
@@ -552,8 +554,11 @@
       <div class="ui-mock-title">プロジェクト作成後のダッシュボード</div>
       <div class="mock-card">
         <div style="display:flex;justify-content:space-between;align-items:center;">
-          <strong style="font-size:0.95rem;">(株)KK精工</strong>
-          <span style="color:#94a3b8;font-size:0.8rem;">5件</span>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <strong style="font-size:0.95rem;">(株)KK精工</strong>
+            <span style="font-size:0.75rem;color:#94a3b8;cursor:pointer;" title="企業を削除">🗑</span>
+          </div>
+          <span style="color:#94a3b8;font-size:0.8rem;">2件</span>
         </div>
         <div style="font-size:0.78rem;color:#64748b;margin:4px 0 10px;padding:8px;background:#f8fafc;border-left:3px solid #e2e8f0;border-radius:4px;">
           工業用切削工具の製造業。従業員約80名。
@@ -573,6 +578,18 @@
           </div>
         </div>
       </div>
+    </div>
+
+    <h3>プロジェクト・企業の削除</h3>
+    <p>ダッシュボードでは、不要になったプロジェクトや企業を削除できます。</p>
+    <ul style="padding-left:20px;">
+      <li style="margin:6px 0;"><strong>プロジェクトの削除：</strong>各プロジェクトカードの右上にある<strong>「✕」</strong>ボタンをクリックします。</li>
+      <li style="margin:6px 0;"><strong>企業ごと一括削除：</strong>企業名の横にある<strong>「🗑」</strong>ボタンをクリックすると、その企業と関連する全プロジェクトが削除されます。</li>
+    </ul>
+
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <div><strong>注意：</strong>削除は元に戻せません。大切なデータは事前に「💾 保存」メニューからJSON形式でバックアップしてください。</div>
     </div>
 
     <div class="callout tip">
@@ -608,8 +625,37 @@
         <tr><td><strong>所要時間</strong></td><td>1回あたりの所要時間</td><td>20分</td></tr>
         <tr><td><strong>頻度</strong></td><td>どのくらいの頻度か</td><td>日次5回</td></tr>
         <tr><td><strong>ツール</strong></td><td>使用するツール・システム</td><td>FAX, 電話, Excel</td></tr>
-        <tr><td><strong>備考</strong></td><td>補足情報</td><td>FAXの場合が約6割。手書き記録が多い</td></tr>
+        <tr><td><strong>ムリ・ムダ・ムラ</strong></td><td>3M分類（複数選択可）</td><td>ムダ, ムラ</td></tr>
       </table>
+    </div>
+
+    <h3>ムリ・ムダ・ムラ（3M）分類</h3>
+    <p>各業務を<strong>トヨタ生産方式の3つのムダ</strong>の観点で分類できます。チェックボックスで複数選択が可能です。</p>
+
+    <div class="ui-mock">
+      <div class="ui-mock-title">3M分類</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
+        <div style="padding:10px;border-radius:10px;background:#fee2e2;border:1px solid #fecaca;">
+          <div style="font-weight:700;color:#991b1b;font-size:0.95rem;">ムリ</div>
+          <div style="font-size:0.78rem;color:#991b1b;margin-top:4px;">過負荷・無理な作業</div>
+          <div style="font-size:0.75rem;color:#64748b;margin-top:6px;">例：担当者に過度な負荷、無理なスケジュール</div>
+        </div>
+        <div style="padding:10px;border-radius:10px;background:#fef3c7;border:1px solid #fde68a;">
+          <div style="font-weight:700;color:#92400e;font-size:0.95rem;">ムダ</div>
+          <div style="font-size:0.78rem;color:#92400e;margin-top:4px;">無駄・付加価値なし</div>
+          <div style="font-size:0.75rem;color:#64748b;margin-top:6px;">例：二重入力、不要な承認、紙の転記</div>
+        </div>
+        <div style="padding:10px;border-radius:10px;background:#dbeafe;border:1px solid #bfdbfe;">
+          <div style="font-weight:700;color:#1e40af;font-size:0.95rem;">ムラ</div>
+          <div style="font-size:0.78rem;color:#1e40af;margin-top:4px;">ばらつき・不均一</div>
+          <div style="font-size:0.75rem;color:#64748b;margin-top:6px;">例：担当者によるやり方の違い、品質のばらつき</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><strong>ポイント：</strong>ムリ・ムダ・ムラの分類は、業務一覧テーブルにカラータグで表示されます。Step 2の問題分析や Step 3のECRS検討の際に、改善の方向性を考える手がかりになります。</div>
     </div>
 
     <h3>CSVインポート</h3>
@@ -955,14 +1001,31 @@
       <div class="ui-mock-title">読込メニュー</div>
       <table class="mock-table">
         <tr><th>メニュー</th><th>説明</th></tr>
-        <tr><td><strong>全データ読込（上書き）</strong></td><td>保存したJSONで全データを上書き復元</td></tr>
-        <tr><td><strong>プロジェクト読込（更新/追加）</strong></td><td>保存したJSONからプロジェクトを追加・更新（既存データは保持）</td></tr>
+        <tr><td><strong>全データ読込</strong></td><td>保存したJSONからプロジェクトを<strong>追加・更新</strong>します。既存のプロジェクトは保持され、同じIDのプロジェクトは上書き更新、新しいプロジェクトは追加されます。</td></tr>
+        <tr><td><strong>プロジェクト読込（更新/追加）</strong></td><td>企業単位やプロジェクト単体のJSONから読み込み。既存データに追加されます。</td></tr>
       </table>
     </div>
 
     <div class="callout warn">
       <span class="callout-icon">⚠️</span>
       <div><strong>注意：</strong>データはブラウザのlocalStorageに保存されます。ブラウザのデータを消去するとデータが失われます。<strong>定期的にJSON保存でバックアップ</strong>を取ることをお勧めします。</div>
+    </div>
+
+    <h3>デモデータ参照</h3>
+    <p>サイドバーの<strong>「🔍 デモデータ参照」</strong>をクリックすると、(株)KK精工のサンプルデータをプレビューモードで閲覧できます。</p>
+
+    <div class="ui-mock">
+      <div class="ui-mock-title">デモデータ参照の仕組み</div>
+      <table class="mock-table">
+        <tr><th>操作</th><th>説明</th></tr>
+        <tr><td><strong>🔍 デモデータ参照</strong></td><td>サンプルデータに一時的に切り替え。自分のデータはメモリに退避されます。</td></tr>
+        <tr><td><strong>← 元のデータに戻る</strong></td><td>プレビューを終了し、自分のデータに復帰します。</td></tr>
+      </table>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-icon">💡</span>
+      <div><strong>ポイント：</strong>デモプレビュー中はlocalStorageに保存されないため、自分のデータが上書きされる心配はありません。各ステップの入力例や分析結果を参考にしてください。</div>
     </div>
 
     <h3>AIアシスト</h3>
