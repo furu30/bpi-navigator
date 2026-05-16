@@ -3,8 +3,22 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>業務プロセス改善ナビゲーター</title>
-  <link rel="stylesheet" href="styles.css">
+  <title>KATA Navi（カタナビ）- 業務プロセス改善 × 属人性の再現ナビゲーター</title>
+  <meta name="description" content="製造業の業務を「作業」と「感覚」に切り分け、標準化とDX/AIで効率化しつつ、感覚業務は形式知化・教育で再現性を高める。業務プロセス改善と人材マネジメントを一気通貫でナビゲートする無料Webアプリ。">
+  <meta name="theme-color" content="#1E293B">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <!-- OGP -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="KATA Navi（カタナビ）- 業務プロセス改善 × 属人性の再現ナビゲーター">
+  <meta property="og:description" content="業務を「作業」と「感覚」に切り分け、標準化と再現性の両輪で改善をナビゲート。ECRS分析と再現性ウィザード（形式知化／共通化教育）を融合した無料Webアプリ。">
+  <meta property="og:url" content="https://bpi-navi.netlify.app/">
+  <meta property="og:site_name" content="KATA Navi">
+  <meta property="og:locale" content="ja_JP">
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="KATA Navi（カタナビ）">
+  <meta name="twitter:description" content="業務を「作業」と「感覚」に切り分け、標準化と再現性の両輪で改善をナビゲートする無料Webアプリ。">
+  <link rel="stylesheet" href="styles.css?v=3">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
@@ -13,8 +27,8 @@
     <!-- サイドバー -->
     <nav id="sidebar">
       <div class="sidebar-header">
-        <h1 class="logo">BPI<span>Navi</span></h1>
-        <p class="logo-sub">業務プロセス改善ナビゲーター</p>
+        <h1 class="logo"><span class="logo-kanji">型</span>KATA<span>Navi</span></h1>
+        <p class="logo-sub">業務プロセス改善 × 属人性の再現</p>
       </div>
       <div class="sidebar-project" id="currentProjectInfo" style="display:none;">
         <div class="project-badge" id="projectBadge"></div>
@@ -31,10 +45,10 @@
           <span class="nav-step">2</span>問題点の可視化と分析
         </li>
         <li class="nav-item" data-view="step3">
-          <span class="nav-step">3</span>ECRS改善対象の選定
+          <span class="nav-step">3</span>改善ルートの選定
         </li>
         <li class="nav-item" data-view="step4">
-          <span class="nav-step">4</span>具体的な改善策の検討
+          <span class="nav-step">4</span>改善策・教育計画の検討
         </li>
         <li class="nav-item" data-view="step5">
           <span class="nav-step">5</span>効果検証と振り返り
@@ -107,12 +121,58 @@
             </div>
           </div>
           <div id="projectList"></div>
-          <div id="noProjects" class="empty-state">
-            <div class="empty-icon">&#128203;</div>
-            <h3>プロジェクトがありません</h3>
-            <p>「新規プロジェクト作成」ボタンから始めましょう。<br>左メニューの「デモデータ参照」でサンプルを確認できます。</p>
-            <div style="margin-top:16px;">
-              <a href="tutorial.html" class="btn btn-outline" style="text-decoration:none;">&#128214; 使い方ガイド</a>
+          <div id="noProjects" class="welcome-hero">
+            <div class="welcome-header">
+              <div class="welcome-logo"><span class="logo-kanji">型</span>KATA<span>Navi</span></div>
+              <p class="welcome-tagline">作業は標準化し、感覚は再現する。</p>
+              <p class="welcome-subtagline">業務プロセス改善 × 人材マネジメントを一気通貫で。</p>
+            </div>
+            <div class="welcome-features">
+              <div class="welcome-feature">
+                <div class="welcome-feature-icon">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 14l2 2 4-4"/></svg>
+                </div>
+                <h4>業務の切り分け</h4>
+                <p>業務を「作業（標準化できる）」と「感覚（高度な判断）」に切り分け、対応方針を明確にします</p>
+              </div>
+              <div class="welcome-feature">
+                <div class="welcome-feature-icon">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/><path d="M9 12l2 2 4-4"/></svg>
+                </div>
+                <h4>ECRS分析</h4>
+                <p>作業はECRS（排除・結合・交換・簡素化）でムダを取り、DX/AIで効率化します</p>
+              </div>
+              <div class="welcome-feature">
+                <div class="welcome-feature-icon">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg>
+                </div>
+                <h4>再現性ウィザード</h4>
+                <p>感覚業務は2ルートで再現性を高める：①データ収集→形式知化、②共通化→教育で対応</p>
+              </div>
+              <div class="welcome-feature">
+                <div class="welcome-feature-icon">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                </div>
+                <h4>AI活用</h4>
+                <p>AIが業務分析・判断軸の言語化・改善提案をサポート。手間を大幅に削減します</p>
+              </div>
+            </div>
+            <div class="welcome-actions">
+              <button class="btn btn-welcome-primary" onclick="window.BPI.toggleDemoPreview()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                デモを体験する
+              </button>
+              <button class="btn btn-welcome-secondary" id="btnWelcomeNewProject" onclick="document.getElementById('btnNewProject').click()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                新規プロジェクト作成
+              </button>
+              <button class="btn btn-welcome-tour" id="btnStartTour" onclick="window.BPI.startTour()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                ガイドツアーを開始
+              </button>
+            </div>
+            <div class="welcome-footer">
+              <a href="tutorial.html" target="_blank">使い方ガイドを読む &rarr;</a>
             </div>
           </div>
         </div>
@@ -132,12 +192,15 @@
           <div class="step-guide">
             <div class="guide-icon">&#128161;</div>
             <div class="guide-text">
-              <strong>気づきポイント</strong>：全業務を「誰が・何を・どうやって・どのくらい」で棚卸しましょう。
-              「こんなに多くの作業をしていたのか」という気づきが改善の第一歩です。
+              <strong>気づきポイント</strong>：全業務を「誰が・何を・どうやって・どのくらい」で棚卸し、さらに各業務が
+              <strong>「作業」（標準化できる）か「感覚」（高度な判断が必要）か</strong>を判別しましょう。
+              この切り分けが、ECRSと再現性のどちらで攻めるかの分岐点になります。
             </div>
           </div>
           <!-- プロセス区分タブ -->
           <div class="process-tabs" id="processTabs"></div>
+          <!-- 業務種別フィルタ -->
+          <div class="worktype-filter" id="worktypeFilter"></div>
           <!-- 業務一覧テーブル -->
           <div class="table-container">
             <table class="data-table" id="taskTable">
@@ -146,6 +209,7 @@
                   <th style="width:40px;">No.</th>
                   <th style="width:80px;">コード</th>
                   <th style="width:90px;">プロセス区分</th>
+                  <th style="width:90px;" title="作業：標準化できる / 感覚：高度な判断が必要 / 混在：両方を含む">業務種別</th>
                   <th>作業内容</th>
                   <th style="width:80px;">担当者</th>
                   <th style="width:80px;">対象</th>
@@ -225,26 +289,30 @@
           </div>
         </div>
 
-        <!-- Step3: ECRS改善対象の選定 -->
+        <!-- Step3: 改善ルートの選定 -->
         <div class="view" id="view-step3">
           <div class="view-header">
-            <h2><span class="step-badge">Step 3</span> ECRSによる改善対象の選定</h2>
+            <h2><span class="step-badge">Step 3</span> 改善ルートの選定</h2>
             <div class="view-actions">
               <button class="btn btn-ai" onclick="window.BPI.openAIAssist(3)">🤖 AIアシスト</button>
-              <button class="btn btn-outline active" id="btnStep3Wizard" data-sub="wizard">ECRSウィザード</button>
+              <button class="btn btn-outline active" id="btnStep3Wizard" data-sub="wizard">改善ルートウィザード</button>
               <button class="btn btn-outline" id="btnStep3List" data-sub="candidates">改善候補一覧</button>
             </div>
           </div>
           <div class="step-guide">
             <div class="guide-icon">&#127919;</div>
             <div class="guide-text">
-              <strong>気づきポイント</strong>：ECRS（排除・結合・交換・簡素化）の視点で各業務を見直しましょう。
-              「なくせる業務がこんなにあった」という発見が生まれます。
+              <strong>気づきポイント</strong>：業務種別（作業／感覚）によって改善ルートが分かれます。
+              <strong>作業</strong>はECRS（排除・結合・交換・簡素化）でムダ取り。
+              <strong>感覚</strong>は「ルートA：データ収集→形式知化」または「ルートB：共通化→教育」で再現性を高めます。
             </div>
           </div>
-          <!-- ECRSウィザード -->
+          <!-- 改善ルートタブ（業務種別の集計＋手動切替） -->
+          <div class="route-tabs" id="routeTabs"></div>
+          <!-- ECRSウィザード／再現性ウィザード -->
           <div id="sub-wizard" class="sub-view active">
             <div id="ecrsWizardArea"></div>
+            <div id="reproWizardArea"></div>
           </div>
           <!-- 改善候補一覧 -->
           <div id="sub-candidates" class="sub-view" style="display:none;">
@@ -256,13 +324,13 @@
           </div>
         </div>
 
-        <!-- Step4: 具体的な改善策の検討 -->
+        <!-- Step4: 改善策・教育計画の検討 -->
         <div class="view" id="view-step4">
           <div class="view-header">
-            <h2><span class="step-badge">Step 4</span> 具体的な改善策の検討</h2>
+            <h2><span class="step-badge">Step 4</span> 改善策・教育計画の検討</h2>
             <div class="view-actions">
               <button class="btn btn-ai" onclick="window.BPI.openAIAssist(4)">🤖 AIアシスト</button>
-              <button class="btn btn-outline active" id="btnStep4Plans" data-sub="plans">改善計画</button>
+              <button class="btn btn-outline active" id="btnStep4Plans" data-sub="plans">計画一覧</button>
               <button class="btn btn-outline" id="btnStep4Gantt" data-sub="gantt">ガントチャート</button>
             </div>
           </div>
@@ -270,7 +338,7 @@
             <div class="guide-icon">&#128736;</div>
             <div class="guide-text">
               <strong>気づきポイント</strong>：改善候補ごとに具体的なアクションプランを立てましょう。
-              「自分たちでもできる改善がある」という自信につなげます。
+              ECRS改善（作業）／形式知化（感覚A）／教育計画（感覚B）の3種が同じ仕組みで管理できます。
             </div>
           </div>
           <!-- 改善計画サブビュー -->
@@ -443,6 +511,45 @@
           </div>
         </div>
         <div class="form-group">
+          <label>業務種別 <span class="required">*</span>
+            <span class="form-hint-inline" title="作業：ルールや順番が書ける／感覚：相手や経験で判断が変わる／混在：両方を含む">？</span>
+          </label>
+          <div class="worktype-radio-group" id="taskWorkTypeGroup">
+            <label class="worktype-radio worktype-radio-sagyo"><input type="radio" name="taskWorkType" value="作業"><span class="worktype-radio-label">作業</span><span class="worktype-radio-desc">変数が少なくマニュアル化しやすい。ECRSで効率化 → DX/AI化へ。</span></label>
+            <label class="worktype-radio worktype-radio-kankaku"><input type="radio" name="taskWorkType" value="感覚"><span class="worktype-radio-label">感覚</span><span class="worktype-radio-desc">経験・感性に依存する高度な判断。再現性ウィザードで形式知化／教育へ。</span></label>
+            <label class="worktype-radio worktype-radio-konzai"><input type="radio" name="taskWorkType" value="混在"><span class="worktype-radio-label">混在</span><span class="worktype-radio-desc">作業と感覚の両方を含む。両ルートを併用して改善。</span></label>
+            <label class="worktype-radio worktype-radio-mihantei"><input type="radio" name="taskWorkType" value="未判定" checked><span class="worktype-radio-label">未判定</span><span class="worktype-radio-desc">あとで判別する。</span></label>
+          </div>
+        </div>
+        <!-- 感覚／混在を選んだときに表示：暗黙知の引き出し -->
+        <div class="form-group tacit-group" id="taskTacitGroup" style="display:none;">
+          <div class="tacit-group-header">
+            <span class="tacit-icon">🧠</span>
+            <strong>判断ポイントの引き出し（5つの問い）</strong>
+            <span class="tacit-hint">分かる範囲で記入。Step3の再現性ウィザードで活用します。</span>
+          </div>
+          <div class="form-group">
+            <label>① 何を見て判断していますか？</label>
+            <input type="text" id="taskJudgeWhat" placeholder="例：刃先の摩耗状態、表面の光沢、削り音、温度">
+          </div>
+          <div class="form-group">
+            <label>② OK / NG を分ける基準は？</label>
+            <input type="text" id="taskJudgeCriteria" placeholder="例：刃欠けが0.05mm以上はNG、削り音が高くなったら交換">
+          </div>
+          <div class="form-group">
+            <label>③ 迷うとき・例外的なケースは？</label>
+            <input type="text" id="taskJudgeException" placeholder="例：材料が硬めの時／納期がタイトな時／新規顧客の時">
+          </div>
+          <div class="form-group">
+            <label>④ ベテランが意識せずやっている工夫は？</label>
+            <input type="text" id="taskTacitTips" placeholder="例：切粉の色で温度を判断、振動の周波数で異常を察知">
+          </div>
+          <div class="form-group">
+            <label>⑤ 若手にはどう教えていますか？</label>
+            <input type="text" id="taskTeachWay" placeholder="例：3ヶ月OJTで隣で見せる、初回は必ず立ち会う">
+          </div>
+        </div>
+        <div class="form-group">
           <label>作業内容（何を） <span class="required">*</span></label>
           <input type="text" id="taskContent" placeholder="具体的な作業内容を記述">
         </div>
@@ -531,7 +638,7 @@
     </div>
   </div>
 
-  <!-- モーダル: 改善計画 -->
+  <!-- モーダル: 改善計画／形式知化／教育プラン -->
   <div class="modal-overlay" id="modalImprovement">
     <div class="modal modal-lg">
       <div class="modal-header">
@@ -545,7 +652,11 @@
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label>ECRS区分</label>
+            <label>計画種別</label>
+            <input type="text" id="impPlanType" readonly>
+          </div>
+          <div class="form-group">
+            <label>区分 / ルート</label>
             <input type="text" id="impECRS" readonly>
           </div>
           <div class="form-group">
@@ -554,7 +665,7 @@
           </div>
         </div>
         <div class="form-group">
-          <label>改善内容 <span class="required">*</span></label>
+          <label id="impContentLabel">改善内容 <span class="required">*</span></label>
           <textarea id="impContent" rows="3" placeholder="具体的に何をどう変えるか"></textarea>
         </div>
         <div class="form-group">
@@ -567,6 +678,12 @@
             <option value="教育訓練">教育訓練</option>
             <option value="システム化">システム化</option>
             <option value="廃止">廃止</option>
+            <option value="マニュアル化">マニュアル化</option>
+            <option value="事例DB構築">事例DB構築</option>
+            <option value="判断基準の言語化">判断基準の言語化</option>
+            <option value="OJTシナリオ整備">OJTシナリオ整備</option>
+            <option value="動画教材作成">動画教材作成</option>
+            <option value="ABC分析による定着化">ABC分析による定着化</option>
             <option value="その他">その他</option>
           </select>
         </div>
@@ -698,7 +815,24 @@
   <!-- 通知トースト -->
   <div id="toast" class="toast"></div>
 
-  <script src="js/ai-assist.js"></script>
-  <script src="js/app.js"></script>
+  <!-- インタラクティブツアー -->
+  <div id="tourOverlay" class="tour-overlay" style="display:none;">
+    <div class="tour-highlight" id="tourHighlight"></div>
+    <div class="tour-tooltip" id="tourTooltip">
+      <div class="tour-tooltip-header">
+        <span class="tour-step-indicator" id="tourStepIndicator"></span>
+        <button class="tour-close" id="tourClose">&times;</button>
+      </div>
+      <h4 class="tour-title" id="tourTitle"></h4>
+      <p class="tour-desc" id="tourDesc"></p>
+      <div class="tour-actions">
+        <button class="btn btn-sm btn-outline" id="tourPrev" style="display:none;">戻る</button>
+        <button class="btn btn-sm btn-primary" id="tourNext">次へ</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/ai-assist.js?v=3"></script>
+  <script src="js/app.js?v=3"></script>
 </body>
 </html>

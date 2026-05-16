@@ -78,14 +78,31 @@ body {
   font-weight: 800;
   color: #fff;
   letter-spacing: -0.5px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .logo span { color: var(--primary); }
 
+.logo .logo-kanji {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 2px solid var(--primary);
+  border-radius: 6px;
+  font-size: 18px;
+  color: var(--primary);
+  font-family: 'Hiragino Mincho ProN', 'Yu Mincho', serif;
+  background: rgba(37,99,235,0.08);
+}
+
 .logo-sub {
   font-size: 11px;
   color: var(--text-light);
-  margin-top: 2px;
+  margin-top: 4px;
 }
 
 .sidebar-project {
@@ -2436,4 +2453,1005 @@ input[readonly] { background: var(--bg); color: var(--text-secondary); }
 
 #navDemoBack:hover {
   background: rgba(8, 145, 178, 0.35);
+}
+
+/* ========== Welcome Hero ========== */
+.welcome-hero {
+  max-width: 720px;
+  margin: 40px auto;
+  text-align: center;
+  animation: welcomeFadeIn 0.8s ease-out;
+}
+
+@keyframes welcomeFadeIn {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.welcome-header {
+  margin-bottom: 40px;
+}
+
+.welcome-logo {
+  font-size: 48px;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: -1px;
+  margin-bottom: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.welcome-logo .logo-kanji {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 60px;
+  border: 3px solid var(--primary);
+  border-radius: 10px;
+  font-size: 36px;
+  color: var(--primary);
+  font-family: 'Hiragino Mincho ProN', 'Yu Mincho', serif;
+  background: rgba(37,99,235,0.08);
+  font-weight: 800;
+}
+
+.welcome-logo span {
+  color: var(--primary);
+}
+
+.welcome-tagline {
+  font-size: 22px;
+  color: var(--text);
+  font-weight: 700;
+  margin-top: 6px;
+}
+
+.welcome-subtagline {
+  font-size: 14px;
+  color: var(--text-secondary);
+  font-weight: 400;
+  margin-top: 4px;
+}
+
+.welcome-features {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+  margin-bottom: 40px;
+}
+
+.welcome-feature:nth-child(4) { animation-delay: 0.6s; }
+
+.welcome-feature {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 28px 20px;
+  transition: transform 0.2s, box-shadow 0.2s;
+  animation: featureSlideUp 0.6s ease-out backwards;
+}
+
+.welcome-feature:nth-child(1) { animation-delay: 0.15s; }
+.welcome-feature:nth-child(2) { animation-delay: 0.3s; }
+.welcome-feature:nth-child(3) { animation-delay: 0.45s; }
+
+@keyframes featureSlideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.welcome-feature:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+
+.welcome-feature-icon {
+  width: 52px;
+  height: 52px;
+  margin: 0 auto 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--primary-light);
+  color: var(--primary);
+  border-radius: 12px;
+}
+
+.welcome-feature h4 {
+  font-size: 16px;
+  margin-bottom: 8px;
+  color: var(--text);
+}
+
+.welcome-feature p {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.welcome-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+  animation: welcomeFadeIn 0.8s ease-out 0.6s backwards;
+}
+
+.btn-welcome-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 32px;
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+}
+
+.btn-welcome-primary:hover {
+  background: var(--primary-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.45);
+}
+
+.btn-welcome-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 28px;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.btn-welcome-secondary:hover {
+  background: var(--bg);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.btn-welcome-tour {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 24px;
+  background: transparent;
+  color: var(--primary);
+  border: 1px dashed var(--primary);
+  border-radius: var(--radius);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-welcome-tour:hover {
+  background: var(--primary-light);
+}
+
+.welcome-footer {
+  animation: welcomeFadeIn 0.8s ease-out 0.8s backwards;
+}
+
+.welcome-footer a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 13px;
+  transition: color 0.2s;
+}
+
+.welcome-footer a:hover {
+  color: var(--primary);
+}
+
+@media (max-width: 640px) {
+  .welcome-features {
+    grid-template-columns: 1fr;
+  }
+  .welcome-logo { font-size: 36px; }
+  .welcome-tagline { font-size: 15px; }
+  .welcome-actions { flex-direction: column; align-items: stretch; }
+}
+
+/* ========== Interactive Tour ========== */
+.tour-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  pointer-events: none;
+}
+
+.tour-overlay::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  pointer-events: auto;
+  animation: tourFadeIn 0.3s ease;
+}
+
+@keyframes tourFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.tour-highlight {
+  position: fixed;
+  border: 3px solid var(--primary);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.55), 0 0 20px rgba(37, 99, 235, 0.4);
+  z-index: 10001;
+  pointer-events: none;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.tour-tooltip {
+  position: fixed;
+  z-index: 10002;
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  width: 340px;
+  max-width: calc(100vw - 32px);
+  box-shadow: var(--shadow-lg);
+  pointer-events: auto;
+  animation: tooltipPop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes tooltipPop {
+  from { opacity: 0; transform: scale(0.9) translateY(8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.tour-tooltip-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.tour-step-indicator {
+  font-size: 12px;
+  color: var(--primary);
+  font-weight: 600;
+  background: var(--primary-light);
+  padding: 3px 10px;
+  border-radius: 99px;
+}
+
+.tour-close {
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: var(--text-light);
+  cursor: pointer;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background 0.2s;
+}
+
+.tour-close:hover {
+  background: var(--bg);
+  color: var(--text);
+}
+
+.tour-title {
+  font-size: 16px;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+
+.tour-desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+
+.tour-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+/* ========== Animations & Transitions ========== */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+#content-area > .view {
+  animation: fadeInUp 0.35s ease-out;
+}
+
+.project-card {
+  animation: fadeInUp 0.4s ease-out backwards;
+}
+
+.project-grid .project-card:nth-child(1) { animation-delay: 0.05s; }
+.project-grid .project-card:nth-child(2) { animation-delay: 0.1s; }
+.project-grid .project-card:nth-child(3) { animation-delay: 0.15s; }
+.project-grid .project-card:nth-child(4) { animation-delay: 0.2s; }
+.project-grid .project-card:nth-child(5) { animation-delay: 0.25s; }
+
+.nav-item {
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+
+.btn {
+  transition: background 0.15s, color 0.15s, border-color 0.15s, transform 0.1s, box-shadow 0.15s;
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+.btn-primary:hover {
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.project-card {
+  transition: transform 0.2s, box-shadow 0.25s;
+}
+
+.project-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lg);
+}
+
+/* Step Nav Bar animation */
+.step-nav-item.completed .step-nav-circle {
+  transition: background 0.3s, border-color 0.3s;
+}
+
+.step-nav-connector.completed {
+  transition: background 0.5s;
+}
+
+/* Toast slide-in */
+.toast {
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s;
+}
+
+/* Table row hover */
+.data-table tbody tr {
+  transition: background 0.15s;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-light);
+}
+
+/* Company group animation */
+.company-group {
+  animation: fadeInUp 0.35s ease-out backwards;
+}
+
+/* ========== Dark Mode ========== */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0F172A;
+    --surface: #1E293B;
+    --border: #334155;
+    --text: #E2E8F0;
+    --text-secondary: #94A3B8;
+    --text-light: #64748B;
+    --shadow: 0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2);
+    --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.3), 0 2px 4px -2px rgba(0,0,0,0.2);
+    --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.3), 0 4px 6px -4px rgba(0,0,0,0.2);
+    --primary-light: rgba(37, 99, 235, 0.15);
+  }
+
+  body { color-scheme: dark; }
+
+  .sidebar-header { border-bottom-color: rgba(255,255,255,0.06); }
+
+  #main-content { background: var(--bg); }
+
+  #topbar {
+    background: var(--surface);
+    border-bottom-color: var(--border);
+  }
+
+  .modal-content {
+    background: var(--surface);
+    color: var(--text);
+  }
+
+  input, textarea, select {
+    background: var(--bg);
+    color: var(--text);
+    border-color: var(--border);
+  }
+
+  .data-table th {
+    background: #1a2332;
+  }
+
+  .data-table td {
+    border-color: var(--border);
+  }
+
+  .data-table tbody tr:hover {
+    background: rgba(37, 99, 235, 0.08);
+  }
+
+  .btn-outline {
+    border-color: var(--border);
+    color: var(--text-secondary);
+  }
+
+  .btn-outline:hover {
+    background: rgba(255,255,255,0.06);
+    color: var(--text);
+  }
+
+  .step-nav-bar {
+    background: var(--surface);
+    border-bottom-color: var(--border);
+  }
+
+  .empty-state {
+    color: var(--text-secondary);
+  }
+
+  .dropdown-menu {
+    background: var(--surface);
+    border-color: var(--border);
+  }
+
+  .dropdown-item:hover {
+    background: rgba(255,255,255,0.06);
+  }
+
+  .card, .project-card {
+    background: var(--surface);
+    border-color: var(--border);
+  }
+
+  .view-header {
+    border-bottom-color: var(--border);
+  }
+
+  .hint-box {
+    background: rgba(37, 99, 235, 0.1);
+    border-color: rgba(37, 99, 235, 0.2);
+  }
+
+  .score-card, .analysis-card {
+    background: var(--surface);
+    border-color: var(--border);
+  }
+
+  .tab-btn {
+    color: var(--text-secondary);
+  }
+
+  .tab-btn.active {
+    border-color: var(--primary);
+  }
+
+  .welcome-feature {
+    background: var(--surface);
+    border-color: var(--border);
+  }
+
+  .welcome-feature-icon {
+    background: rgba(37, 99, 235, 0.15);
+  }
+
+  .btn-welcome-secondary {
+    background: var(--surface);
+    color: var(--text);
+    border-color: var(--border);
+  }
+
+  .btn-welcome-secondary:hover {
+    background: var(--bg);
+  }
+
+  .tour-tooltip {
+    background: var(--surface);
+    color: var(--text);
+  }
+
+  .tour-step-indicator {
+    background: rgba(37, 99, 235, 0.2);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--border);
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--text-light);
+  }
+
+  /* Chart.js dark canvas */
+  canvas {
+    filter: none;
+  }
+
+  .company-group-header {
+    border-color: var(--border);
+  }
+
+  .company-group-body {
+    background: transparent;
+  }
+}
+
+/* ========================================
+   KATA Navi 拡張：業務種別 / 再現性ルート
+   ======================================== */
+
+/* --- 業務種別バッジ（テーブル表示） --- */
+.worktype-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.4;
+  white-space: nowrap;
+  border: 1px solid transparent;
+}
+.worktype-badge-sagyo {
+  background: #DBEAFE;
+  color: #1E40AF;
+  border-color: #BFDBFE;
+}
+.worktype-badge-kankaku {
+  background: #FCE7F3;
+  color: #9D174D;
+  border-color: #FBCFE8;
+}
+.worktype-badge-konzai {
+  background: #EDE9FE;
+  color: #5B21B6;
+  border-color: #DDD6FE;
+}
+.worktype-badge-mihantei {
+  background: #F1F5F9;
+  color: #64748B;
+  border-color: #E2E8F0;
+}
+
+/* --- 業務種別フィルタ（Step1） --- */
+.worktype-filter {
+  display: flex;
+  gap: 8px;
+  margin: 12px 0;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.worktype-filter-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+.worktype-filter-btn {
+  padding: 4px 12px;
+  font-size: 12px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  cursor: pointer;
+  transition: all 0.15s;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+.worktype-filter-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+.worktype-filter-btn.active {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+.worktype-filter-btn .count {
+  margin-left: 4px;
+  opacity: 0.8;
+  font-weight: 400;
+}
+
+/* --- 業務種別ラジオ（モーダル） --- */
+.worktype-radio-group {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+.worktype-radio {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  border: 2px solid var(--border);
+  transition: all 0.15s;
+  background: var(--surface);
+}
+.worktype-radio:hover {
+  border-color: var(--primary);
+  background: var(--bg);
+}
+.worktype-radio input[type="radio"] {
+  display: none;
+}
+.worktype-radio-label {
+  font-weight: 700;
+  font-size: 14px;
+}
+.worktype-radio-desc {
+  font-size: 11px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+.worktype-radio:has(input:checked) {
+  background: rgba(37, 99, 235, 0.08);
+}
+.worktype-radio-sagyo:has(input:checked) {
+  border-color: #2563EB;
+  background: #DBEAFE;
+}
+.worktype-radio-sagyo:has(input:checked) .worktype-radio-label { color: #1E40AF; }
+
+.worktype-radio-kankaku:has(input:checked) {
+  border-color: #DB2777;
+  background: #FCE7F3;
+}
+.worktype-radio-kankaku:has(input:checked) .worktype-radio-label { color: #9D174D; }
+
+.worktype-radio-konzai:has(input:checked) {
+  border-color: #7C3AED;
+  background: #EDE9FE;
+}
+.worktype-radio-konzai:has(input:checked) .worktype-radio-label { color: #5B21B6; }
+
+.worktype-radio-mihantei:has(input:checked) {
+  border-color: #94A3B8;
+  background: #F1F5F9;
+}
+
+/* --- 暗黙知引き出しブロック（モーダル） --- */
+.tacit-group {
+  background: linear-gradient(135deg, #FDF2F8 0%, #FCE7F3 100%);
+  border: 1px solid #FBCFE8;
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-top: 12px;
+}
+.tacit-group-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  font-size: 13px;
+  color: #9D174D;
+}
+.tacit-icon { font-size: 18px; }
+.tacit-hint {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-weight: 400;
+}
+.tacit-group .form-group { margin-bottom: 10px; }
+.tacit-group .form-group:last-child { margin-bottom: 0; }
+.tacit-group label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #9D174D;
+}
+.form-hint-inline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  background: var(--text-light);
+  color: #fff;
+  font-size: 10px;
+  border-radius: 50%;
+  margin-left: 4px;
+  cursor: help;
+  font-weight: 400;
+}
+
+/* --- 改善ルートタブ（Step3） --- */
+.route-tabs {
+  display: flex;
+  gap: 12px;
+  margin: 16px 0;
+  padding: 4px;
+  background: var(--bg);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+}
+.route-tab {
+  flex: 1;
+  padding: 12px 16px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.route-tab:hover { background: var(--surface); }
+.route-tab.active {
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+.route-tab-icon {
+  font-size: 22px;
+  flex-shrink: 0;
+}
+.route-tab-body {
+  display: flex;
+  flex-direction: column;
+}
+.route-tab-name {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--text);
+}
+.route-tab-meta {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+.route-tab.active .route-tab-name { color: var(--primary); }
+.route-tab-ecrs.active .route-tab-name { color: #1E40AF; }
+.route-tab-repro.active .route-tab-name { color: #9D174D; }
+
+/* --- 再現性ウィザード --- */
+.repro-wizard-task {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow);
+}
+.repro-wizard-task.is-kankaku {
+  border-left: 4px solid #DB2777;
+}
+.repro-wizard-task.is-konzai {
+  border-left: 4px solid #7C3AED;
+}
+.repro-task-header {
+  margin-bottom: 16px;
+}
+.repro-task-header h4 {
+  font-size: 15px;
+  margin-bottom: 4px;
+}
+.repro-task-header .task-meta {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.repro-tacit-summary {
+  background: #FDF2F8;
+  border-left: 3px solid #DB2777;
+  padding: 10px 14px;
+  margin: 12px 0;
+  border-radius: 6px;
+  font-size: 12px;
+}
+.repro-tacit-summary .tacit-line {
+  margin: 4px 0;
+  color: var(--text);
+}
+.repro-tacit-summary .tacit-line strong {
+  color: #9D174D;
+  margin-right: 6px;
+}
+.repro-tacit-empty {
+  color: var(--text-light);
+  font-style: italic;
+}
+
+.repro-route-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 12px;
+}
+.repro-route-card {
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.15s;
+  background: var(--surface);
+}
+.repro-route-card:hover {
+  border-color: var(--primary);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+.repro-route-card.selected {
+  border-color: var(--primary);
+  background: var(--primary-light);
+}
+.repro-route-card-A.selected {
+  border-color: #0891B2;
+  background: #CFFAFE;
+}
+.repro-route-card-B.selected {
+  border-color: #DB2777;
+  background: #FCE7F3;
+}
+.repro-route-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.repro-route-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  font-weight: 700;
+  font-size: 13px;
+}
+.repro-route-badge-A {
+  background: #0891B2;
+  color: #fff;
+}
+.repro-route-badge-B {
+  background: #DB2777;
+  color: #fff;
+}
+.repro-route-title {
+  font-weight: 700;
+  font-size: 14px;
+}
+.repro-route-card-A .repro-route-title { color: #0E7490; }
+.repro-route-card-B .repro-route-title { color: #9D174D; }
+.repro-route-flow {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+.repro-route-desc {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+.repro-route-actions {
+  margin-top: 10px;
+  display: flex;
+  gap: 6px;
+}
+
+/* --- 計画種別バッジ（Step4/候補一覧） --- */
+.plan-type-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+  margin-right: 4px;
+}
+.plan-type-ecrs {
+  background: #DBEAFE;
+  color: #1E40AF;
+}
+.plan-type-formalize {
+  background: #CFFAFE;
+  color: #0E7490;
+}
+.plan-type-education {
+  background: #FCE7F3;
+  color: #9D174D;
+}
+
+/* --- 感覚業務マップ（Step2 サマリ） --- */
+.kankaku-summary {
+  background: linear-gradient(135deg, #FDF2F8 0%, #FFFFFF 100%);
+  border: 1px solid #FBCFE8;
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  margin-top: 16px;
+}
+.kankaku-summary h4 {
+  color: #9D174D;
+  font-size: 14px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.kankaku-summary-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+.kankaku-stat {
+  text-align: center;
+  padding: 10px;
+  background: var(--surface);
+  border-radius: 6px;
+  border: 1px solid var(--border);
+}
+.kankaku-stat-val {
+  font-size: 22px;
+  font-weight: 700;
+  color: #9D174D;
+}
+.kankaku-stat-lbl {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+/* --- 改善計画カードのwork-type帯 --- */
+.plan-card.is-kankaku {
+  border-left: 3px solid #DB2777;
+}
+.plan-card.is-sagyo {
+  border-left: 3px solid #2563EB;
+}
+.plan-card.is-konzai {
+  border-left: 3px solid #7C3AED;
+}
+
+/* --- レスポンシブ調整 --- */
+@media (max-width: 768px) {
+  .welcome-features { grid-template-columns: 1fr 1fr; }
+  .worktype-radio-group { grid-template-columns: 1fr; }
+  .repro-route-cards { grid-template-columns: 1fr; }
+  .route-tabs { flex-direction: column; }
+  .kankaku-summary-stats { grid-template-columns: 1fr 1fr; }
 }

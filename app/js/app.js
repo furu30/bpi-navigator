@@ -1,6 +1,9 @@
 /**
- * 業務プロセス改善ナビゲーター - メインアプリケーション
+ * KATA Navi（カタナビ） - 業務プロセス改善 × 属人性の再現ナビゲーター
  * ローカルストレージベースのSPAアプリケーション
+ *
+ * 旧名: BPI Navi（業務プロセス改善ナビゲーター）
+ * 旧データキー bpiNavi_data からの自動移行に対応。
  */
 ;(function() {
   'use strict';
@@ -8,7 +11,24 @@
   // ==========================================
   // データストア
   // ==========================================
-  const STORAGE_KEY = 'bpiNavi_data';
+  const STORAGE_KEY = 'kataNavi_data';
+  const LEGACY_STORAGE_KEY = 'bpiNavi_data';
+
+  // 業務種別の定義（作業/感覚/混在/未判定）
+  const WORK_TYPES = ['作業', '感覚', '混在', '未判定'];
+  const WORK_TYPE_META = {
+    '作業':   { badge: 'worktype-badge-sagyo',   color: '#1E40AF', desc: 'ルールや手順を書ける。標準化 → ECRSで効率化 → DX/AI化が可能' },
+    '感覚':   { badge: 'worktype-badge-kankaku', color: '#9D174D', desc: '経験・感性に依存する判断。再現性ウィザードで形式知化／教育へ' },
+    '混在':   { badge: 'worktype-badge-konzai',  color: '#5B21B6', desc: '作業と感覚が両方含まれる。ECRSと再現性ウィザードを併用' },
+    '未判定': { badge: 'worktype-badge-mihantei',color: '#64748B', desc: 'まだ判別していない' }
+  };
+
+  // 計画種別
+  const PLAN_TYPE_META = {
+    'ECRS':       { badge: 'plan-type-ecrs',       label: 'ECRS改善' },
+    '形式知化':   { badge: 'plan-type-formalize',  label: '形式知化' },
+    '教育':       { badge: 'plan-type-education',  label: '教育' }
+  };
 
   const DEFAULT_PROCESS_CATEGORIES = [
     '受注', '生産管理', '製造', '品質管理', '出荷', '購買', '設計開発', '総務', '経理', 'その他'
@@ -81,7 +101,11 @@
     };
   }
 
-  /** 既存データにcompaniesが無い場合、プロジェクトのcompanyフィールドから自動生成 */
+  /** 既存データのスキーマ移行：
+   *  - companies が無ければ自動生成
+   *  - 各 task に workType を後付け（未判定）
+   *  - 各 improvement に planType を後付け（ECRS）
+   */
   function migrateData(data) {
     if (!data.companies) {
       data.companies = {};
@@ -91,6 +115,20 @@
         }
       });
     }
+    (data.projects || []).forEach(p => {
+      (p.tasks || []).forEach(t => {
+        if (!t.workType) t.workType = '未判定';
+        if (!t.tacit) t.tacit = null;
+      });
+      (p.improvements || []).forEach(imp => {
+        if (!imp.planType) imp.planType = 'ECRS';
+        if (imp.planType === 'ECRS' && !imp.ecrsKey) imp.ecrsKey = 'S';
+        // 再現性ルート（A/B）も維持
+        if (!imp.reproRoute && (imp.planType === '形式知化' || imp.planType === '教育')) {
+          imp.reproRoute = imp.planType === '形式知化' ? 'A' : 'B';
+        }
+      });
+    });
     return data;
   }
 
@@ -102,6 +140,13 @@
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) return migrateData(JSON.parse(raw));
+      // 旧 BPI Navi のデータが残っていれば自動移行
+      const legacy = localStorage.getItem(LEGACY_STORAGE_KEY);
+      if (legacy) {
+        const migrated = migrateData(JSON.parse(legacy));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(migrated));
+        return migrated;
+      }
     } catch (e) { console.error('Load error:', e); }
     return createDefaultData();
   }
@@ -200,8 +245,8 @@
       dashboard: 'ダッシュボード',
       step1: 'Step 1: 業務プロセスの洗い出し',
       step2: 'Step 2: 問題点の可視化と分析',
-      step3: 'Step 3: ECRSによる改善対象の選定',
-      step4: 'Step 4: 具体的な改善策の検討',
+      step3: 'Step 3: 改善ルートの選定',
+      step4: 'Step 4: 改善策・教育計画の検討',
       step5: 'Step 5: 効果検証と振り返り',
       settings: '設定・マスタ管理'
     };
@@ -270,8 +315,8 @@
     const stepLabels = [
       '業務洗い出し',
       '問題分析',
-      'ECRS選定',
-      '改善策検討',
+      '改善ルート',
+      '改善・教育策',
       '効果検証'
     ];
     const curStep = proj.currentStep || 1;
@@ -440,13 +485,13 @@
         const companyProjects = appData.projects.filter(p => p.company === company);
         const companyInfo = (appData.companies || {})[company] || {};
         const exportData = {
-          _type: 'bpi_company',
+          _type: 'kata_company',
           _version: 1,
           company: company,
           companyInfo: companyInfo,
           projects: companyProjects
         };
-        downloadJson(exportData, `bpi_company_${sanitizeFilename(company)}_${today()}.json`);
+        downloadJson(exportData, `kata_company_${sanitizeFilename(company)}_${today()}.json`);
         showToast(`「${company}」の${companyProjects.length}件を保存しました`, 'success');
       });
     });
@@ -481,8 +526,8 @@
         e.stopPropagation();
         const proj = appData.projects.find(p => p.id === btn.dataset.save);
         if (!proj) return;
-        const exportData = { _type: 'bpi_project', _version: 1, project: proj };
-        downloadJson(exportData, `bpi_project_${sanitizeFilename(proj.company)}_${sanitizeFilename(proj.name)}_${today()}.json`);
+        const exportData = { _type: 'kata_project', _version: 1, project: proj };
+        downloadJson(exportData, `kata_project_${sanitizeFilename(proj.company)}_${sanitizeFilename(proj.name)}_${today()}.json`);
         showToast(`「${proj.name}」を保存しました`, 'success');
       });
     });
@@ -532,6 +577,7 @@
   }
 
   let step1Filter = 'all';
+  let step1WorkTypeFilter = 'all';
 
   function renderStep1() {
     const proj = getCurrentProject();
@@ -539,8 +585,41 @@
     if (!proj.tasks) proj.tasks = [];
 
     renderProcessTabs(proj);
+    renderWorkTypeFilter(proj);
     renderTaskTable(proj);
     renderStep1Stats(proj);
+  }
+
+  /** 業務種別フィルタ */
+  function renderWorkTypeFilter(proj) {
+    const container = $('#worktypeFilter');
+    if (!container) return;
+    const tasks = proj.tasks || [];
+    const counts = { all: tasks.length };
+    WORK_TYPES.forEach(t => counts[t] = 0);
+    tasks.forEach(t => { const wt = t.workType || '未判定'; counts[wt] = (counts[wt] || 0) + 1; });
+
+    let html = '<span class="worktype-filter-label">業務種別：</span>';
+    html += `<button class="worktype-filter-btn ${step1WorkTypeFilter === 'all' ? 'active' : ''}" data-wt="all">すべて<span class="count">(${counts.all})</span></button>`;
+    WORK_TYPES.forEach(wt => {
+      const meta = WORK_TYPE_META[wt];
+      html += `<button class="worktype-filter-btn ${step1WorkTypeFilter === wt ? 'active' : ''}" data-wt="${escapeHtml(wt)}" title="${escapeHtml(meta.desc)}">${escapeHtml(wt)}<span class="count">(${counts[wt] || 0})</span></button>`;
+    });
+
+    container.innerHTML = html;
+    container.querySelectorAll('.worktype-filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        step1WorkTypeFilter = btn.dataset.wt;
+        renderStep1();
+      });
+    });
+  }
+
+  /** 業務種別バッジHTMLを返す */
+  function renderWorkTypeBadge(workType) {
+    const wt = workType || '未判定';
+    const meta = WORK_TYPE_META[wt] || WORK_TYPE_META['未判定'];
+    return `<span class="worktype-badge ${meta.badge}" title="${escapeHtml(meta.desc)}">${escapeHtml(wt)}</span>`;
   }
 
   function renderProcessTabs(proj) {
@@ -574,6 +653,9 @@
     if (step1Filter !== 'all') {
       tasks = tasks.filter(t => t.category === step1Filter);
     }
+    if (step1WorkTypeFilter !== 'all') {
+      tasks = tasks.filter(t => (t.workType || '未判定') === step1WorkTypeFilter);
+    }
 
     if (tasks.length === 0) {
       tbody.innerHTML = '';
@@ -587,6 +669,7 @@
         <td>${i + 1}</td>
         <td><span style="font-size:11px;color:var(--text-secondary)">${escapeHtml(t.code)}</span></td>
         <td>${escapeHtml(t.category)}</td>
+        <td>${renderWorkTypeBadge(t.workType)}</td>
         <td><strong>${escapeHtml(t.content)}</strong></td>
         <td>${escapeHtml(t.person)}</td>
         <td>${escapeHtml(t.target)}</td>
@@ -609,12 +692,19 @@
     const tasks = proj.tasks || [];
     const totalMonthly = tasks.reduce((sum, t) => sum + calcMonthlyTime(t), 0);
     const categories = [...new Set(tasks.map(t => t.category))];
+    const sagyo = tasks.filter(t => t.workType === '作業').length;
+    const kankaku = tasks.filter(t => t.workType === '感覚').length;
+    const konzai = tasks.filter(t => t.workType === '混在').length;
+    const mihantei = tasks.filter(t => !t.workType || t.workType === '未判定').length;
 
     $('#step1Stats').innerHTML = `
       登録業務: <strong>${tasks.length}</strong>件
       ／ プロセス区分: <strong>${categories.length}</strong>種類
-      ／ 月間合計時間: <strong>${Math.round(totalMonthly)}</strong>分
-      （約<strong>${(totalMonthly / 60).toFixed(1)}</strong>時間）
+      ／ 月間合計: <strong>${Math.round(totalMonthly)}</strong>分（約<strong>${(totalMonthly / 60).toFixed(1)}</strong>時間）
+      <br>
+      <span style="font-size:12px;color:var(--text-secondary)">
+        業務種別: 作業 <strong>${sagyo}</strong> ／ 感覚 <strong>${kankaku}</strong> ／ 混在 <strong>${konzai}</strong> ／ 未判定 <strong>${mihantei}</strong>
+      </span>
     `;
   }
 
@@ -661,12 +751,25 @@
       `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`
     ).join('');
 
+    const setWorkType = (wt) => {
+      const w = wt || '未判定';
+      $$('input[name="taskWorkType"]').forEach(r => { r.checked = (r.value === w); });
+      updateTacitVisibility(w);
+    };
+
     if (taskId) {
       const task = (proj.tasks || []).find(t => t.id === taskId);
       if (!task) return;
       $('#modalTaskTitle').textContent = '業務タスクの編集';
       sel.value = task.category;
       $('#taskCode').value = task.code;
+      setWorkType(task.workType);
+      const tacit = task.tacit || {};
+      $('#taskJudgeWhat').value = tacit.judgeWhat || '';
+      $('#taskJudgeCriteria').value = tacit.judgeCriteria || '';
+      $('#taskJudgeException').value = tacit.judgeException || '';
+      $('#taskTacitTips').value = tacit.tacitTips || '';
+      $('#taskTeachWay').value = tacit.teachWay || '';
       $('#taskContent').value = task.content || '';
       $('#taskPerson').value = task.person || '';
       $('#taskTarget').value = task.target || '';
@@ -690,6 +793,12 @@
     } else {
       $('#modalTaskTitle').textContent = '業務タスクの追加';
       $('#taskCode').value = generateTaskCode(sel.value);
+      setWorkType('未判定');
+      $('#taskJudgeWhat').value = '';
+      $('#taskJudgeCriteria').value = '';
+      $('#taskJudgeException').value = '';
+      $('#taskTacitTips').value = '';
+      $('#taskTeachWay').value = '';
       $('#taskContent').value = '';
       $('#taskPerson').value = '';
       $('#taskTarget').value = '';
@@ -716,7 +825,23 @@
       }
     });
 
+    // 業務種別ラジオの変更で暗黙知ブロックの表示制御
+    $$('input[name="taskWorkType"]').forEach(r => {
+      r.addEventListener('change', () => updateTacitVisibility(r.value));
+    });
+
     openModal('modalTask');
+  }
+
+  function updateTacitVisibility(workType) {
+    const group = $('#taskTacitGroup');
+    if (!group) return;
+    group.style.display = (workType === '感覚' || workType === '混在') ? '' : 'none';
+  }
+
+  function getSelectedWorkType() {
+    const radio = document.querySelector('input[name="taskWorkType"]:checked');
+    return radio ? radio.value : '未判定';
   }
 
   function saveTask() {
@@ -727,9 +852,25 @@
     const content = $('#taskContent').value.trim();
     if (!content) { showToast('作業内容を入力してください', 'error'); return; }
 
+    const workType = getSelectedWorkType();
+    let tacit = null;
+    if (workType === '感覚' || workType === '混在') {
+      const judgeWhat = $('#taskJudgeWhat').value.trim();
+      const judgeCriteria = $('#taskJudgeCriteria').value.trim();
+      const judgeException = $('#taskJudgeException').value.trim();
+      const tacitTips = $('#taskTacitTips').value.trim();
+      const teachWay = $('#taskTeachWay').value.trim();
+      // いずれかの項目が埋まっていれば保存
+      if (judgeWhat || judgeCriteria || judgeException || tacitTips || teachWay) {
+        tacit = { judgeWhat, judgeCriteria, judgeException, tacitTips, teachWay };
+      }
+    }
+
     const taskData = {
       category: $('#taskCategory').value,
       code: $('#taskCode').value,
+      workType,
+      tacit,
       content,
       person: $('#taskPerson').value.trim(),
       target: $('#taskTarget').value.trim(),
@@ -881,6 +1022,8 @@
         id: genId(),
         category: (mapping.category !== undefined ? cols[mapping.category] : '') || 'その他',
         code: '',
+        workType: '未判定',
+        tacit: null,
         content: (mapping.content !== undefined ? cols[mapping.content] : cols[0]) || '',
         person: mapping.person !== undefined ? cols[mapping.person] : '',
         target: mapping.target !== undefined ? cols[mapping.target] : '',
@@ -924,6 +1067,15 @@
   // ==========================================
   // Step 2: 問題点の可視化と分析
   // ==========================================
+  let step2ProblemFilter = 'all'; // 'all' | 'problems' | 'unscored' | 'scored'
+
+  /** タスクが「問題あり」と判定されるか
+   *  - 問題カテゴリが1つ以上 / ムリ・ムダ・ムラが1つ以上 のいずれか
+   */
+  function taskHasProblem(t) {
+    return (t.problems && t.problems.length > 0) || (t.mmm && t.mmm.length > 0);
+  }
+
   function renderStep2() {
     const proj = getCurrentProject();
     if (!proj || !proj.tasks) return;
@@ -939,7 +1091,57 @@
       return;
     }
 
-    container.innerHTML = tasks.map(t => {
+    // 感覚業務サマリ
+    const kankaku = tasks.filter(t => t.workType === '感覚');
+    const konzai = tasks.filter(t => t.workType === '混在');
+    const withTacit = tasks.filter(t => t.tacit && (t.tacit.judgeWhat || t.tacit.judgeCriteria));
+    const highFreqKankaku = kankaku.filter(t => t.freqType === '日次').length;
+
+    const kankakuSummaryHtml = (kankaku.length + konzai.length > 0) ? `
+      <div class="kankaku-summary">
+        <h4>🧠 感覚業務（属人性）サマリ</h4>
+        <div style="font-size:12px;color:var(--text-secondary);margin-bottom:10px;">
+          標準化しきれない判断業務。Step 3の再現性ウィザードでルートA（形式知化）/ ルートB（教育）を選定します。
+        </div>
+        <div class="kankaku-summary-stats">
+          <div class="kankaku-stat"><div class="kankaku-stat-val">${kankaku.length}</div><div class="kankaku-stat-lbl">感覚業務</div></div>
+          <div class="kankaku-stat"><div class="kankaku-stat-val">${konzai.length}</div><div class="kankaku-stat-lbl">混在業務</div></div>
+          <div class="kankaku-stat"><div class="kankaku-stat-val">${withTacit.length}</div><div class="kankaku-stat-lbl">判断軸を言語化済み</div></div>
+          <div class="kankaku-stat"><div class="kankaku-stat-val">${highFreqKankaku}</div><div class="kankaku-stat-lbl">日次の感覚業務</div></div>
+        </div>
+      </div>
+    ` : '';
+
+    // 絞り込みフィルタ（問題ありのみ / 未スコアリング / スコアリング済み / すべて）
+    const countAll = tasks.length;
+    const countProblems = tasks.filter(taskHasProblem).length;
+    const countUnscored = tasks.filter(t => !t.scores).length;
+    const countScored = tasks.filter(t => t.scores).length;
+
+    const filterHtml = `
+      <div class="worktype-filter" style="margin:14px 0 10px;">
+        <span class="worktype-filter-label">絞り込み：</span>
+        <button class="worktype-filter-btn ${step2ProblemFilter === 'all' ? 'active' : ''}" data-step2filter="all">すべて<span class="count">(${countAll})</span></button>
+        <button class="worktype-filter-btn ${step2ProblemFilter === 'problems' ? 'active' : ''}" data-step2filter="problems" title="問題カテゴリ または ムリ・ムダ・ムラ が1つ以上ある業務">問題ありのみ<span class="count">(${countProblems})</span></button>
+        <button class="worktype-filter-btn ${step2ProblemFilter === 'unscored' ? 'active' : ''}" data-step2filter="unscored" title="まだスコアリングしていない業務">未スコアリング<span class="count">(${countUnscored})</span></button>
+        <button class="worktype-filter-btn ${step2ProblemFilter === 'scored' ? 'active' : ''}" data-step2filter="scored" title="スコアリング済みの業務">スコアリング済み<span class="count">(${countScored})</span></button>
+      </div>
+    `;
+
+    // フィルタ適用
+    let filtered = tasks;
+    if (step2ProblemFilter === 'problems') filtered = tasks.filter(taskHasProblem);
+    else if (step2ProblemFilter === 'unscored') filtered = tasks.filter(t => !t.scores);
+    else if (step2ProblemFilter === 'scored') filtered = tasks.filter(t => t.scores);
+
+    const emptyHtml = (filtered.length === 0) ? `
+      <div class="empty-state" style="padding:24px;">
+        <p>該当する業務がありません。</p>
+        <p style="font-size:12px;color:var(--text-secondary);">フィルタを「すべて」に戻すか、Step 1で問題点を追加してください。</p>
+      </div>
+    ` : '';
+
+    container.innerHTML = kankakuSummaryHtml + filterHtml + emptyHtml + filtered.map(t => {
       const scores = t.scores || { timeImpact: 1, qualityImpact: 1, frequency: 1, difficulty: 5 };
       const total = calcTotalScore(scores).toFixed(1);
       const problems = t.problems || [];
@@ -1004,6 +1206,14 @@
         </div>
       `;
     }).join('');
+
+    // 絞り込みフィルタのイベント
+    container.querySelectorAll('[data-step2filter]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        step2ProblemFilter = btn.dataset.step2filter;
+        renderScoringList(proj);
+      });
+    });
 
     // スコアスライダーのイベント
     container.querySelectorAll('input[type="range"]').forEach(slider => {
@@ -1235,27 +1445,82 @@
   }
 
   // ==========================================
-  // Step 3: ECRS改善対象の選定
+  // Step 3: 改善ルートの選定（ECRS / 再現性ウィザード）
   // ==========================================
+  let step3RouteTab = 'auto'; // 'auto' | 'ecrs' | 'repro'
+
   function renderStep3() {
     const proj = getCurrentProject();
     if (!proj || !proj.tasks) return;
-    renderECRSWizard(proj);
+    renderRouteTabs(proj);
+    renderRouteContent(proj);
+  }
+
+  /** 改善ルートタブ（業務種別ベースで自動判別） */
+  function renderRouteTabs(proj) {
+    const tabs = $('#routeTabs');
+    if (!tabs) return;
+    const tasks = proj.tasks || [];
+    const sagyoCount = tasks.filter(t => t.workType === '作業' || t.workType === '混在').length;
+    const kankakuCount = tasks.filter(t => t.workType === '感覚' || t.workType === '混在').length;
+
+    tabs.innerHTML = `
+      <button class="route-tab route-tab-ecrs ${step3RouteTab === 'auto' || step3RouteTab === 'ecrs' ? 'active' : ''}" data-tab="ecrs">
+        <span class="route-tab-icon">⚙️</span>
+        <span class="route-tab-body">
+          <span class="route-tab-name">ECRSウィザード（作業）</span>
+          <span class="route-tab-meta">対象: ${sagyoCount}件 ／ 排除・結合・交換・簡素化で効率化</span>
+        </span>
+      </button>
+      <button class="route-tab route-tab-repro ${step3RouteTab === 'repro' ? 'active' : ''}" data-tab="repro">
+        <span class="route-tab-icon">🧠</span>
+        <span class="route-tab-body">
+          <span class="route-tab-name">再現性ウィザード（感覚）</span>
+          <span class="route-tab-meta">対象: ${kankakuCount}件 ／ ルートA：形式知化 ／ ルートB：教育</span>
+        </span>
+      </button>
+    `;
+    tabs.querySelectorAll('.route-tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        step3RouteTab = btn.dataset.tab;
+        renderStep3();
+      });
+    });
+  }
+
+  function renderRouteContent(proj) {
+    const ecrsArea = $('#ecrsWizardArea');
+    const reproArea = $('#reproWizardArea');
+    if (!ecrsArea || !reproArea) return;
+    const showEcrs = (step3RouteTab !== 'repro');
+    ecrsArea.style.display = showEcrs ? '' : 'none';
+    reproArea.style.display = showEcrs ? 'none' : '';
+    if (showEcrs) renderECRSWizard(proj);
+    else renderReproWizard(proj);
   }
 
   function renderECRSWizard(proj) {
     const area = $('#ecrsWizardArea');
     const tasks = proj.tasks || [];
 
+    // 「作業」「混在」「未判定」のみ対象（純粋な感覚業務は除外）
+    const target = tasks.filter(t => {
+      const wt = t.workType || '未判定';
+      return wt !== '感覚';
+    });
+
     // 優先度スコアで降順ソート
-    const sorted = [...tasks].sort((a, b) => {
+    const sorted = [...target].sort((a, b) => {
       const sa = a.scores ? calcTotalScore(a.scores) : 0;
       const sb = b.scores ? calcTotalScore(b.scores) : 0;
       return sb - sa;
     });
 
     if (sorted.length === 0) {
-      area.innerHTML = '<div class="empty-state"><p>Step 1で業務を登録してください。</p></div>';
+      area.innerHTML = `<div class="empty-state">
+        <p>ECRSの対象（作業／混在）の業務がありません。</p>
+        <p style="font-size:12px;color:var(--text-secondary)">Step 1で業務を登録するか、感覚業務は「再現性ウィザード」タブで対応してください。</p>
+      </div>`;
       return;
     }
 
@@ -1324,6 +1589,113 @@
     });
   }
 
+  /** 再現性ウィザード：感覚／混在の業務に対して、ルートA(形式知化) / ルートB(教育) を選択 */
+  function renderReproWizard(proj) {
+    const area = $('#reproWizardArea');
+    if (!area) return;
+    const tasks = (proj.tasks || []).filter(t => t.workType === '感覚' || t.workType === '混在');
+
+    if (tasks.length === 0) {
+      area.innerHTML = `<div class="empty-state">
+        <p>「感覚」または「混在」に分類された業務がありません。</p>
+        <p style="font-size:12px;color:var(--text-secondary)">
+          Step 1の業務種別で「感覚」を選ぶと、5つの問いで判断軸を引き出し、ここで再現性を高めるルートを選定できます。
+        </p>
+      </div>`;
+      return;
+    }
+
+    // 優先度スコア降順
+    const sorted = [...tasks].sort((a, b) => {
+      const sa = a.scores ? calcTotalScore(a.scores) : 0;
+      const sb = b.scores ? calcTotalScore(b.scores) : 0;
+      return sb - sa;
+    });
+
+    area.innerHTML = `
+      <div class="step-guide" style="background:#FDF2F8;border-left-color:#DB2777;margin-bottom:16px;">
+        <div class="guide-icon">🧠</div>
+        <div class="guide-text">
+          <strong>属人性の再現性を高める2ルート</strong><br>
+          <strong style="color:#0E7490;">ルートA：データ収集 → 形式知化</strong>（変数を測れる業務向け／例：杜氏の勘を温度・発酵データで再現）<br>
+          <strong style="color:#9D174D;">ルートB：共通化 → 教育</strong>（数値化できない業務向け／例：事例DB＋OJTで判断を継承）
+        </div>
+      </div>
+    ` + sorted.map(t => {
+      const tacit = t.tacit || {};
+      const totalScore = t.scores ? calcTotalScore(t.scores).toFixed(1) : '-';
+      const route = t.reproRoute || '';
+      const cls = t.workType === '感覚' ? 'is-kankaku' : 'is-konzai';
+
+      const tacitLines = [
+        { label: '見ているもの', val: tacit.judgeWhat },
+        { label: 'OK/NG基準', val: tacit.judgeCriteria },
+        { label: '迷う/例外', val: tacit.judgeException },
+        { label: '暗黙のコツ', val: tacit.tacitTips },
+        { label: '教え方', val: tacit.teachWay }
+      ].filter(l => l.val);
+
+      const tacitSummary = tacitLines.length === 0
+        ? `<div class="repro-tacit-empty">※ 判断ポイントが未入力です。Step 1のモーダルで「5つの問い」に答えると再現性が高まります。</div>`
+        : tacitLines.map(l => `<div class="tacit-line"><strong>${l.label}:</strong>${escapeHtml(l.val)}</div>`).join('');
+
+      const existingPlanA = (proj.improvements || []).find(i => i.taskId === t.id && i.planType === '形式知化');
+      const existingPlanB = (proj.improvements || []).find(i => i.taskId === t.id && i.planType === '教育');
+
+      return `
+        <div class="repro-wizard-task ${cls}" data-task-id="${t.id}">
+          <div class="repro-task-header">
+            <h4>${renderWorkTypeBadge(t.workType)} ${escapeHtml(t.content)}</h4>
+            <div class="task-meta">${escapeHtml(t.category)} / ${escapeHtml(t.person)} / 優先度: ${totalScore}</div>
+          </div>
+          <div class="repro-tacit-summary">${tacitSummary}</div>
+          <div class="repro-route-cards">
+            <div class="repro-route-card repro-route-card-A ${route === 'A' ? 'selected' : ''}" data-task="${t.id}" data-route="A">
+              <div class="repro-route-card-header">
+                <span class="repro-route-badge repro-route-badge-A">A</span>
+                <span class="repro-route-title">データ収集 → 形式知化</span>
+              </div>
+              <div class="repro-route-flow">計測 → 数値化 → 標準化 → 自動化候補</div>
+              <div class="repro-route-desc">変数が測定可能。データを蓄積し基準を数値で言語化。獺祭型のアプローチ。</div>
+              <div class="repro-route-actions">
+                <button class="btn btn-xs btn-primary" onclick="window.BPI.openReproPlan('${t.id}', 'A')">
+                  ${existingPlanA ? '形式知化プランを編集' : '形式知化プランを作成'}
+                </button>
+              </div>
+            </div>
+            <div class="repro-route-card repro-route-card-B ${route === 'B' ? 'selected' : ''}" data-task="${t.id}" data-route="B">
+              <div class="repro-route-card-header">
+                <span class="repro-route-badge repro-route-badge-B">B</span>
+                <span class="repro-route-title">共通化 → 教育</span>
+              </div>
+              <div class="repro-route-flow">事例DB → OJTシナリオ → ABC分析で定着</div>
+              <div class="repro-route-desc">数値化困難。事例集と判断フローを共通知化し、若手が再現できる教育サイクルへ。</div>
+              <div class="repro-route-actions">
+                <button class="btn btn-xs btn-primary" onclick="window.BPI.openReproPlan('${t.id}', 'B')">
+                  ${existingPlanB ? '教育プランを編集' : '教育プランを作成'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    // カードクリックでルート選択（ボタン以外）
+    area.querySelectorAll('.repro-route-card').forEach(card => {
+      card.addEventListener('click', (e) => {
+        if (e.target.closest('button')) return;
+        const taskId = card.dataset.task;
+        const route = card.dataset.route;
+        const task = (proj.tasks || []).find(t => t.id === taskId);
+        if (!task) return;
+        task.reproRoute = route;
+        saveData(appData);
+        renderReproWizard(proj);
+      });
+    });
+  }
+
   function renderCandidatesList() {
     const proj = getCurrentProject();
     if (!proj || !proj.tasks) return;
@@ -1332,35 +1704,52 @@
     const candidates = [];
 
     proj.tasks.forEach(t => {
-      if (!t.ecrs) return;
-      const ecrsEntries = [];
-      ECRS_DEFINITIONS.forEach(def => {
-        if (t.ecrs[def.key] === 'yes' || t.ecrs[def.key] === 'maybe') {
-          ecrsEntries.push({
-            task: t,
-            ecrsKey: def.key,
-            ecrsName: def.name,
-            ecrsColor: def.color,
-            answer: t.ecrs[def.key],
-            score: t.scores ? calcTotalScore(t.scores) : 0
-          });
-        }
-      });
-      candidates.push(...ecrsEntries);
+      // ECRS候補
+      if (t.ecrs) {
+        ECRS_DEFINITIONS.forEach(def => {
+          if (t.ecrs[def.key] === 'yes' || t.ecrs[def.key] === 'maybe') {
+            candidates.push({
+              kind: 'ECRS',
+              task: t,
+              ecrsKey: def.key,
+              ecrsName: def.name,
+              ecrsColor: def.color,
+              answer: t.ecrs[def.key],
+              score: t.scores ? calcTotalScore(t.scores) : 0
+            });
+          }
+        });
+      }
+      // 再現性ルート候補
+      if ((t.workType === '感覚' || t.workType === '混在') && t.reproRoute) {
+        candidates.push({
+          kind: t.reproRoute === 'A' ? '形式知化' : '教育',
+          task: t,
+          route: t.reproRoute,
+          score: t.scores ? calcTotalScore(t.scores) : 0
+        });
+      }
     });
 
     // スコアでソート
     candidates.sort((a, b) => b.score - a.score);
 
     if (candidates.length === 0) {
-      container.innerHTML = '<div class="empty-state"><p>ECRSウィザードで判定を行ってください。</p></div>';
+      container.innerHTML = `<div class="empty-state">
+        <p>まだ改善候補がありません。</p>
+        <p style="font-size:12px;color:var(--text-secondary)">
+          作業はECRSウィザードで判定、感覚は再現性ウィザードでルートA/Bを選択してください。
+        </p>
+      </div>`;
       return;
     }
 
-    // ECRS区分でグルーピング
-    const grouped = { E: [], C: [], R: [], S: [] };
+    // ECRS区分 + 再現性ルートでグルーピング
+    const grouped = { E: [], C: [], R: [], S: [], 形式知化: [], 教育: [] };
     candidates.forEach(c => {
-      if (grouped[c.ecrsKey]) grouped[c.ecrsKey].push(c);
+      if (c.kind === 'ECRS' && grouped[c.ecrsKey]) grouped[c.ecrsKey].push(c);
+      else if (c.kind === '形式知化') grouped['形式知化'].push(c);
+      else if (c.kind === '教育') grouped['教育'].push(c);
     });
 
     let html = '';
@@ -1374,7 +1763,7 @@
       items.forEach(c => {
         html += `
           <div class="candidate-card ecrs-${c.ecrsColor}">
-            <h4>${escapeHtml(c.task.content)}</h4>
+            <h4>${renderWorkTypeBadge(c.task.workType)} ${escapeHtml(c.task.content)}</h4>
             <div class="candidate-meta">${escapeHtml(c.task.category)} / ${escapeHtml(c.task.person)} / スコア: ${c.score.toFixed(1)}</div>
             <div style="margin-top:8px;">
               <button class="btn btn-sm btn-primary" onclick="window.BPI.openImprovementModal('${c.task.id}', '${c.ecrsKey}')">
@@ -1386,6 +1775,50 @@
       });
       html += '</div>';
     });
+
+    // 形式知化（ルートA）
+    if (grouped['形式知化'].length > 0) {
+      html += `<h3 style="margin:16px 0 8px;display:flex;align-items:center;gap:8px;color:#0E7490;">
+        <span class="repro-route-badge repro-route-badge-A">A</span> 形式知化（${grouped['形式知化'].length}件）
+      </h3>`;
+      html += '<div class="candidates-grid">';
+      grouped['形式知化'].forEach(c => {
+        html += `
+          <div class="candidate-card" style="border-left:3px solid #0891B2;">
+            <h4>${renderWorkTypeBadge(c.task.workType)} ${escapeHtml(c.task.content)}</h4>
+            <div class="candidate-meta">${escapeHtml(c.task.category)} / ${escapeHtml(c.task.person)} / スコア: ${c.score.toFixed(1)}</div>
+            <div style="margin-top:8px;">
+              <button class="btn btn-sm btn-primary" onclick="window.BPI.openReproPlan('${c.task.id}', 'A')">
+                形式知化プランを作成
+              </button>
+            </div>
+          </div>
+        `;
+      });
+      html += '</div>';
+    }
+
+    // 教育（ルートB）
+    if (grouped['教育'].length > 0) {
+      html += `<h3 style="margin:16px 0 8px;display:flex;align-items:center;gap:8px;color:#9D174D;">
+        <span class="repro-route-badge repro-route-badge-B">B</span> 教育（${grouped['教育'].length}件）
+      </h3>`;
+      html += '<div class="candidates-grid">';
+      grouped['教育'].forEach(c => {
+        html += `
+          <div class="candidate-card" style="border-left:3px solid #DB2777;">
+            <h4>${renderWorkTypeBadge(c.task.workType)} ${escapeHtml(c.task.content)}</h4>
+            <div class="candidate-meta">${escapeHtml(c.task.category)} / ${escapeHtml(c.task.person)} / スコア: ${c.score.toFixed(1)}</div>
+            <div style="margin-top:8px;">
+              <button class="btn btn-sm btn-primary" onclick="window.BPI.openReproPlan('${c.task.id}', 'B')">
+                教育プランを作成
+              </button>
+            </div>
+          </div>
+        `;
+      });
+      html += '</div>';
+    }
 
     container.innerHTML = html;
   }
@@ -1403,20 +1836,33 @@
     const container = $('#improvementPlans');
     if (!proj.improvements) proj.improvements = [];
 
-    // 改善候補があるタスクを表示
+    // ECRS候補 + 再現性候補
     const candidates = [];
     (proj.tasks || []).forEach(t => {
-      if (!t.ecrs) return;
-      ECRS_DEFINITIONS.forEach(def => {
-        if (t.ecrs[def.key] === 'yes' || t.ecrs[def.key] === 'maybe') {
-          const existing = proj.improvements.find(imp => imp.taskId === t.id && imp.ecrsKey === def.key);
-          candidates.push({ task: t, ecrsKey: def.key, ecrsName: def.name, ecrsColor: def.color, improvement: existing });
-        }
-      });
+      if (t.ecrs) {
+        ECRS_DEFINITIONS.forEach(def => {
+          if (t.ecrs[def.key] === 'yes' || t.ecrs[def.key] === 'maybe') {
+            const existing = proj.improvements.find(imp => imp.taskId === t.id && imp.planType === 'ECRS' && imp.ecrsKey === def.key);
+            candidates.push({
+              kind: 'ECRS', task: t, ecrsKey: def.key, ecrsName: def.name, ecrsColor: def.color, improvement: existing
+            });
+          }
+        });
+      }
+      if ((t.workType === '感覚' || t.workType === '混在') && t.reproRoute) {
+        const planType = t.reproRoute === 'A' ? '形式知化' : '教育';
+        const existing = proj.improvements.find(imp => imp.taskId === t.id && imp.planType === planType);
+        candidates.push({ kind: planType, task: t, route: t.reproRoute, improvement: existing });
+      }
     });
 
     if (candidates.length === 0) {
-      container.innerHTML = '<div class="empty-state"><p>Step 3でECRS判定を行い、改善候補を特定してください。</p></div>';
+      container.innerHTML = `<div class="empty-state">
+        <p>まだ改善候補がありません。</p>
+        <p style="font-size:12px;color:var(--text-secondary)">
+          Step 3でECRS判定または再現性ルート選定を行ってください。
+        </p>
+      </div>`;
       return;
     }
 
@@ -1427,36 +1873,57 @@
       const statusText = { pending: '未着手', progress: '進行中', done: '完了' }[status];
       const statusClass = { pending: 'status-pending', progress: 'status-progress', done: 'status-done' }[status];
 
-      // 問題カテゴリに応じたテンプレート提案
+      // 種別バッジ
+      let typeBadge, typeLabel, editFn, planKey;
+      if (c.kind === 'ECRS') {
+        typeBadge = `<span class="plan-type-badge plan-type-ecrs">ECRS</span><span class="ecrs-label ecrs-label-${c.ecrsColor}" style="margin-right:6px;">${c.ecrsKey}</span>`;
+        typeLabel = 'ECRS改善';
+        editFn = `window.BPI.openImprovementModal('${c.task.id}', '${c.ecrsKey}')`;
+        planKey = `ECRS:${c.ecrsKey}`;
+      } else if (c.kind === '形式知化') {
+        typeBadge = `<span class="plan-type-badge plan-type-formalize">A 形式知化</span>`;
+        typeLabel = '形式知化（ルートA）';
+        editFn = `window.BPI.openReproPlan('${c.task.id}', 'A')`;
+        planKey = '形式知化';
+      } else { // 教育
+        typeBadge = `<span class="plan-type-badge plan-type-education">B 教育</span>`;
+        typeLabel = '教育（ルートB）';
+        editFn = `window.BPI.openReproPlan('${c.task.id}', 'B')`;
+        planKey = '教育';
+      }
+
+      const wtCls = c.task.workType === '感覚' ? 'is-kankaku'
+                  : c.task.workType === '混在' ? 'is-konzai'
+                  : c.task.workType === '作業' ? 'is-sagyo' : '';
+
+      // 問題カテゴリに応じたテンプレート提案（ECRSのみ）
       const problemIds = c.task.problems || [];
       const templates = [];
       problemIds.forEach(pid => {
-        if (IMPROVEMENT_TEMPLATES[pid]) {
-          templates.push(...IMPROVEMENT_TEMPLATES[pid]);
-        }
+        if (IMPROVEMENT_TEMPLATES[pid]) templates.push(...IMPROVEMENT_TEMPLATES[pid]);
       });
       const uniqueTemplates = [...new Set(templates)].slice(0, 3);
 
       html += `
-        <div class="plan-card">
+        <div class="plan-card ${wtCls}">
           <div class="plan-card-header">
             <h4>
-              <span class="ecrs-label ecrs-label-${c.ecrsColor}" style="margin-right:6px;">${c.ecrsKey}</span>
+              ${typeBadge}
               ${escapeHtml(c.task.content)}
             </h4>
             <span class="plan-status ${statusClass}">${statusText}</span>
           </div>
           ${imp ? `
             <div class="plan-details">
-              <div class="plan-detail-item"><label>改善内容</label><strong>${escapeHtml(imp.content)}</strong></div>
+              <div class="plan-detail-item"><label>${escapeHtml(typeLabel)}内容</label><strong>${escapeHtml(imp.content)}</strong></div>
               <div class="plan-detail-item"><label>手段</label><strong>${escapeHtml(imp.method || '-')}</strong></div>
               <div class="plan-detail-item"><label>担当</label><strong>${escapeHtml(imp.person || '-')}</strong></div>
               <div class="plan-detail-item"><label>期間</label><strong>${imp.startDate || '?'} 〜 ${imp.endDate || '?'}</strong></div>
               <div class="plan-detail-item"><label>期待効果</label><strong>${escapeHtml(imp.effectQuantity || '-')}</strong></div>
             </div>
             <div style="margin-top:8px;">
-              <button class="btn btn-xs btn-outline" onclick="window.BPI.openImprovementModal('${c.task.id}', '${c.ecrsKey}')">編集</button>
-              <select onchange="window.BPI.updateImpStatus('${c.task.id}','${c.ecrsKey}',this.value)" style="font-size:12px;padding:3px 6px;">
+              <button class="btn btn-xs btn-outline" onclick="${editFn}">編集</button>
+              <select onchange="window.BPI.updateImpStatus('${c.task.id}','${planKey}',this.value)" style="font-size:12px;padding:3px 6px;">
                 <option value="pending" ${status==='pending'?'selected':''}>未着手</option>
                 <option value="progress" ${status==='progress'?'selected':''}>進行中</option>
                 <option value="done" ${status==='done'?'selected':''}>完了</option>
@@ -1464,14 +1931,14 @@
             </div>
           ` : `
             <div style="margin:8px 0;">
-              ${uniqueTemplates.length > 0 ? `
+              ${uniqueTemplates.length > 0 && c.kind === 'ECRS' ? `
                 <div style="font-size:12px;color:var(--text-secondary);margin-bottom:6px;">改善のヒント:</div>
                 <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;">
                   ${uniqueTemplates.map(t => `<span style="font-size:11px;background:var(--warning-light);padding:2px 8px;border-radius:10px;">${escapeHtml(t)}</span>`).join('')}
                 </div>
               ` : ''}
-              <button class="btn btn-sm btn-primary" onclick="window.BPI.openImprovementModal('${c.task.id}', '${c.ecrsKey}')">
-                改善計画を作成
+              <button class="btn btn-sm btn-primary" onclick="${editFn}">
+                ${escapeHtml(typeLabel)}プランを作成
               </button>
             </div>
           `}
@@ -1484,10 +1951,15 @@
 
   let editingImpTaskId = null;
   let editingImpEcrsKey = null;
+  let editingImpPlanType = 'ECRS';  // 'ECRS' | '形式知化' | '教育'
+  let editingImpReproRoute = null;  // 'A' | 'B' | null
 
   function openImprovementModal(taskId, ecrsKey) {
     editingImpTaskId = taskId;
     editingImpEcrsKey = ecrsKey;
+    editingImpPlanType = 'ECRS';
+    editingImpReproRoute = null;
+
     const proj = getCurrentProject();
     if (!proj) return;
 
@@ -1495,14 +1967,60 @@
     if (!task) return;
 
     const ecrsDef = ECRS_DEFINITIONS.find(d => d.key === ecrsKey);
-    const existing = (proj.improvements || []).find(imp => imp.taskId === taskId && imp.ecrsKey === ecrsKey);
+    const existing = (proj.improvements || []).find(imp => imp.taskId === taskId && imp.planType === 'ECRS' && imp.ecrsKey === ecrsKey);
 
     $('#impTaskName').value = task.content;
+    $('#impPlanType').value = 'ECRS改善';
     $('#impECRS').value = ecrsDef ? ecrsDef.name : ecrsKey;
     $('#impScore').value = task.scores ? calcTotalScore(task.scores).toFixed(1) : '-';
+    $('#impContentLabel').innerHTML = '改善内容 <span class="required">*</span>';
+    $('#impContent').placeholder = '具体的に何をどう変えるか';
 
+    fillImprovementFormFields(existing);
+    $('#modalImprovementTitle').textContent = existing ? 'ECRS改善プランの編集' : 'ECRS改善プラン作成';
+    openModal('modalImprovement');
+  }
+
+  /** 再現性プラン（形式知化/教育）モーダル */
+  function openReproPlan(taskId, route) {
+    const proj = getCurrentProject();
+    if (!proj) return;
+    const task = (proj.tasks || []).find(t => t.id === taskId);
+    if (!task) return;
+
+    // ルート確定をtaskにも反映
+    task.reproRoute = route;
+    saveData(appData);
+
+    editingImpTaskId = taskId;
+    editingImpEcrsKey = null;
+    editingImpPlanType = (route === 'A') ? '形式知化' : '教育';
+    editingImpReproRoute = route;
+
+    const existing = (proj.improvements || []).find(imp => imp.taskId === taskId && imp.planType === editingImpPlanType);
+
+    $('#impTaskName').value = task.content;
+    $('#impPlanType').value = editingImpPlanType;
+    $('#impECRS').value = route === 'A' ? 'ルートA：データ収集→形式知化' : 'ルートB：共通化→教育';
+    $('#impScore').value = task.scores ? calcTotalScore(task.scores).toFixed(1) : '-';
+
+    if (route === 'A') {
+      $('#impContentLabel').innerHTML = '形式知化の計画 <span class="required">*</span>';
+      $('#impContent').placeholder = '例：刃先摩耗を測定器で1日3回計測→閾値0.05mmで交換ルール化→検査記録に追加';
+    } else {
+      $('#impContentLabel').innerHTML = '教育・共通知化の計画 <span class="required">*</span>';
+      $('#impContent').placeholder = '例：過去のクレーム事例を10件DB化→判断フロー作成→新人OJTで月1ロールプレイ実施';
+    }
+
+    fillImprovementFormFields(existing);
+    $('#modalImprovementTitle').textContent = existing
+      ? (route === 'A' ? '形式知化プランの編集' : '教育プランの編集')
+      : (route === 'A' ? '形式知化プラン作成' : '教育プラン作成');
+    openModal('modalImprovement');
+  }
+
+  function fillImprovementFormFields(existing) {
     if (existing) {
-      $('#modalImprovementTitle').textContent = '改善アクションプランの編集';
       $('#impContent').value = existing.content || '';
       $('#impMethod').value = existing.method || '';
       $('#impPerson').value = existing.person || '';
@@ -1512,7 +2030,6 @@
       $('#impEffectQuantity').value = existing.effectQuantity || '';
       $('#impEffectQuality').value = existing.effectQuality || '';
     } else {
-      $('#modalImprovementTitle').textContent = '改善アクションプラン作成';
       $('#impContent').value = '';
       $('#impMethod').value = '';
       $('#impPerson').value = '';
@@ -1522,8 +2039,6 @@
       $('#impEffectQuantity').value = '';
       $('#impEffectQuality').value = '';
     }
-
-    openModal('modalImprovement');
   }
 
   function saveImprovement() {
@@ -1532,11 +2047,13 @@
     if (!proj.improvements) proj.improvements = [];
 
     const content = $('#impContent').value.trim();
-    if (!content) { showToast('改善内容を入力してください', 'error'); return; }
+    if (!content) { showToast('内容を入力してください', 'error'); return; }
 
     const impData = {
       taskId: editingImpTaskId,
-      ecrsKey: editingImpEcrsKey,
+      planType: editingImpPlanType,
+      ecrsKey: editingImpPlanType === 'ECRS' ? editingImpEcrsKey : null,
+      reproRoute: editingImpReproRoute,
       content,
       method: $('#impMethod').value,
       person: $('#impPerson').value.trim(),
@@ -1548,7 +2065,12 @@
       status: 'pending'
     };
 
-    const idx = proj.improvements.findIndex(imp => imp.taskId === editingImpTaskId && imp.ecrsKey === editingImpEcrsKey);
+    // 既存検索：ECRSはplanType+ecrsKey、再現性はplanTypeで一意
+    const idx = proj.improvements.findIndex(imp =>
+      imp.taskId === editingImpTaskId &&
+      imp.planType === editingImpPlanType &&
+      (editingImpPlanType !== 'ECRS' || imp.ecrsKey === editingImpEcrsKey)
+    );
     if (idx >= 0) {
       impData.status = proj.improvements[idx].status;
       proj.improvements[idx] = impData;
@@ -1559,13 +2081,20 @@
     saveData(appData);
     closeModal('modalImprovement');
     renderStep4();
-    showToast('改善計画を保存しました', 'success');
+    showToast(`${PLAN_TYPE_META[editingImpPlanType]?.label || '計画'}を保存しました`, 'success');
   }
 
-  function updateImpStatus(taskId, ecrsKey, status) {
+  function updateImpStatus(taskId, planKey, status) {
     const proj = getCurrentProject();
     if (!proj) return;
-    const imp = (proj.improvements || []).find(i => i.taskId === taskId && i.ecrsKey === ecrsKey);
+    // planKey は 'ECRS:S' / '形式知化' / '教育' 形式
+    let imp;
+    if (planKey.startsWith('ECRS:')) {
+      const ek = planKey.split(':')[1];
+      imp = (proj.improvements || []).find(i => i.taskId === taskId && i.planType === 'ECRS' && i.ecrsKey === ek);
+    } else {
+      imp = (proj.improvements || []).find(i => i.taskId === taskId && i.planType === planKey);
+    }
     if (imp) {
       imp.status = status;
       saveData(appData);
@@ -1639,6 +2168,16 @@
     renderMeasurements(proj);
   }
 
+  function impPlanKey(imp) {
+    if (imp.planType === 'ECRS') return `ECRS:${imp.ecrsKey || ''}`;
+    return imp.planType || 'ECRS';
+  }
+  function measurementMatchesImp(m, imp) {
+    if (m.planKey) return m.planKey === impPlanKey(imp);
+    // 旧形式（ecrsKey）との互換
+    return m.taskId === imp.taskId && imp.planType === 'ECRS' && m.ecrsKey === imp.ecrsKey;
+  }
+
   function renderMeasurements(proj) {
     const container = $('#measurementArea');
     const imps = (proj.improvements || []).filter(i => i.status === 'done' || i.status === 'progress');
@@ -1655,21 +2194,25 @@
       const task = (proj.tasks || []).find(t => t.id === imp.taskId);
       if (!task) return;
 
-      const measurement = proj.measurements.find(m => m.taskId === imp.taskId && m.ecrsKey === imp.ecrsKey);
+      const planKey = impPlanKey(imp);
+      const measurement = (proj.measurements || []).find(m => m.taskId === imp.taskId && measurementMatchesImp(m, imp));
       const beforeTime = parseFloat(task.timeRequired) || 0;
       const afterTime = measurement ? parseFloat(measurement.afterTime) : null;
-      const reduction = afterTime !== null ? Math.round(((beforeTime - afterTime) / beforeTime) * 100) : null;
+      const reduction = afterTime !== null && beforeTime > 0 ? Math.round(((beforeTime - afterTime) / beforeTime) * 100) : null;
+
+      const typeMeta = PLAN_TYPE_META[imp.planType] || { badge: 'plan-type-ecrs', label: 'ECRS' };
+      const typeBadgeHtml = `<span class="plan-type-badge ${typeMeta.badge}">${escapeHtml(typeMeta.label)}${imp.planType === 'ECRS' && imp.ecrsKey ? ' / ' + imp.ecrsKey : ''}</span>`;
 
       html += `
         <div class="measure-card">
           <div style="display:flex;justify-content:space-between;align-items:center;">
-            <h4>${escapeHtml(task.content)}</h4>
-            <button class="btn btn-sm btn-outline" onclick="window.BPI.openMeasureModal('${imp.taskId}', '${imp.ecrsKey}')">
+            <h4>${typeBadgeHtml} ${renderWorkTypeBadge(task.workType)} ${escapeHtml(task.content)}</h4>
+            <button class="btn btn-sm btn-outline" onclick="window.BPI.openMeasureModal('${imp.taskId}', '${planKey}')">
               ${measurement ? '測定データ編集' : '効果測定入力'}
             </button>
           </div>
-          <div style="font-size:12px;color:var(--text-secondary);margin:4px 0;">改善内容: ${escapeHtml(imp.content)}</div>
-          ${afterTime !== null ? `
+          <div style="font-size:12px;color:var(--text-secondary);margin:4px 0;">${escapeHtml(typeMeta.label)}内容: ${escapeHtml(imp.content)}</div>
+          ${afterTime !== null && imp.planType === 'ECRS' ? `
             <div class="measure-comparison">
               <div class="measure-value">
                 <div class="label">改善前</div>
@@ -1682,9 +2225,14 @@
                 <div class="number after">${afterTime}</div>
                 <div class="label">${escapeHtml(task.timeUnit || '分')}</div>
               </div>
-              <div class="measure-reduction">${reduction >= 0 ? '-' : '+'}${Math.abs(reduction)}%</div>
+              <div class="measure-reduction">${reduction >= 0 ? '-' : '+'}${Math.abs(reduction || 0)}%</div>
             </div>
             ${measurement.comment ? `<div style="font-size:12px;color:var(--text-secondary);">コメント: ${escapeHtml(measurement.comment)}</div>` : ''}
+          ` : measurement ? `
+            <div style="margin:8px 0;font-size:13px;">
+              ${measurement.achievement ? `達成状況: <strong>${escapeHtml(measurement.achievement)}</strong>` : ''}
+              ${measurement.comment ? `<div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">コメント: ${escapeHtml(measurement.comment)}</div>` : ''}
+            </div>
           ` : `<div style="margin:12px 0;font-size:13px;color:var(--text-light);">まだ効果測定データが入力されていません。</div>`}
         </div>
       `;
@@ -1694,18 +2242,21 @@
   }
 
   let measureTaskId = null;
-  let measureEcrsKey = null;
+  let measurePlanKey = null;
 
-  function openMeasureModal(taskId, ecrsKey) {
+  function openMeasureModal(taskId, planKey) {
     measureTaskId = taskId;
-    measureEcrsKey = ecrsKey;
+    measurePlanKey = planKey;
     const proj = getCurrentProject();
     if (!proj) return;
 
     const task = proj.tasks.find(t => t.id === taskId);
     if (!task) return;
 
-    const existing = (proj.measurements || []).find(m => m.taskId === taskId && m.ecrsKey === ecrsKey);
+    const existing = (proj.measurements || []).find(m => m.taskId === taskId && (
+      (m.planKey && m.planKey === planKey) ||
+      (!m.planKey && planKey.startsWith('ECRS:') && m.ecrsKey === planKey.split(':')[1])
+    ));
 
     $('#measureTaskName').value = task.content;
     $('#measureUnit').textContent = task.timeUnit || '分';
@@ -1732,14 +2283,19 @@
 
     const data = {
       taskId: measureTaskId,
-      ecrsKey: measureEcrsKey,
+      planKey: measurePlanKey,
+      // 後方互換
+      ecrsKey: measurePlanKey && measurePlanKey.startsWith('ECRS:') ? measurePlanKey.split(':')[1] : null,
       afterTime: $('#measureAfterTime').value,
       achievement: $('#measureAchievement').value,
       date: $('#measureDate').value,
       comment: $('#measureComment').value.trim()
     };
 
-    const idx = proj.measurements.findIndex(m => m.taskId === measureTaskId && m.ecrsKey === measureEcrsKey);
+    const idx = (proj.measurements || []).findIndex(m => m.taskId === measureTaskId && (
+      (m.planKey && m.planKey === measurePlanKey) ||
+      (!m.planKey && measurePlanKey && measurePlanKey.startsWith('ECRS:') && m.ecrsKey === measurePlanKey.split(':')[1])
+    ));
     if (idx >= 0) proj.measurements[idx] = data;
     else proj.measurements.push(data);
 
@@ -1872,7 +2428,7 @@
 
   function prCoverPage(proj, company, companyInfo, todayStr) {
     return `<div class="pr-page pr-cover">
-      <div class="pr-cover-logo">BPI<span>Navi</span></div>
+      <div class="pr-cover-logo"><span style="display:inline-block;border:3px solid #2563EB;border-radius:10px;padding:4px 14px;color:#2563EB;font-family:'Hiragino Mincho ProN','Yu Mincho',serif;margin-right:14px;">型</span>KATA<span>Navi</span></div>
       <div class="pr-cover-title">業務プロセス改善 報告書</div>
       <div class="pr-cover-divider"></div>
       <div class="pr-cover-project">${escapeHtml(proj.name)}</div>
@@ -1956,7 +2512,7 @@
           }).join('')}</tbody>
         </table>
       ` : ''}
-      <div class="pr-footer">BPI Navigator - 業務プロセス改善報告書</div>
+      <div class="pr-footer">KATA Navi - 業務プロセス改善 × 属人性の再現 報告書</div>
     </div>`;
   }
 
@@ -2000,7 +2556,7 @@
           <td style="text-align:right">${Math.round(calcMonthlyTime(t))}</td>
         </tr>`).join('')}</tbody>
       </table>
-      <div class="pr-footer">BPI Navigator - 業務プロセス改善報告書</div>
+      <div class="pr-footer">KATA Navi - 業務プロセス改善 × 属人性の再現 報告書</div>
     </div>`;
   }
 
@@ -2063,7 +2619,7 @@
           }).join('')}
         </tr>`).join('')}</tbody>
       </table>
-      <div class="pr-footer">BPI Navigator - 業務プロセス改善報告書</div>
+      <div class="pr-footer">KATA Navi - 業務プロセス改善 × 属人性の再現 報告書</div>
     </div>`;
   }
 
@@ -2106,7 +2662,7 @@
           </tr>`;
         }).join('')}</tbody>
       </table>
-      <div class="pr-footer">BPI Navigator - 業務プロセス改善報告書</div>
+      <div class="pr-footer">KATA Navi - 業務プロセス改善 × 属人性の再現 報告書</div>
     </div>`;
   }
 
@@ -2154,7 +2710,7 @@
           }).join('')}</tbody>
         </table>
       ` : ''}
-      <div class="pr-footer">BPI Navigator - 業務プロセス改善報告書</div>
+      <div class="pr-footer">KATA Navi - 業務プロセス改善 × 属人性の再現 報告書</div>
     </div>`;
   }
 
@@ -2205,7 +2761,7 @@
           </tr></tbody>
         </table>
       ` : '<p style="color:#94a3b8;">効果測定データはまだありません。</p>'}
-      <div class="pr-footer">BPI Navigator - 業務プロセス改善報告書</div>
+      <div class="pr-footer">KATA Navi - 業務プロセス改善 × 属人性の再現 報告書</div>
     </div>`;
   }
 
@@ -2233,7 +2789,7 @@
           </tr>`;
         }).join('')}</tbody>
       </table>
-      <div class="pr-footer">BPI Navigator - 業務プロセス改善報告書</div>
+      <div class="pr-footer">KATA Navi - 業務プロセス改善 × 属人性の再現 報告書</div>
     </div>`;
   }
 
@@ -2313,7 +2869,7 @@
     xlImprovementSheet(wb, tasks, imps);
     xlMeasurementSheet(wb, tasks, imps, measures);
 
-    const filename = `BPI_${sanitizeFilename(proj.company || 'export')}_${sanitizeFilename(proj.name || 'project')}_${today()}.xlsx`;
+    const filename = `KATA_${sanitizeFilename(proj.company || 'export')}_${sanitizeFilename(proj.name || 'project')}_${today()}.xlsx`;
     XLSX.writeFile(wb, filename);
     showToast('Excelファイルをエクスポートしました', 'success');
   }
@@ -2355,21 +2911,24 @@
   }
 
   function xlTaskListSheet(wb, tasks) {
-    const header = ['コード', 'プロセス区分', '作業内容', '担当者', '対象', '方法', '所要時間', '単位', '頻度種別', '頻度回数', '月間時間（分）', 'ツール', 'ムリ・ムダ・ムラ', '3M内容'];
+    const header = ['コード', 'プロセス区分', '業務種別', '作業内容', '担当者', '対象', '方法', '所要時間', '単位', '頻度種別', '頻度回数', '月間時間（分）', 'ツール', 'ムリ・ムダ・ムラ', '3M内容', '判断軸（見るもの）', 'OK/NG基準', '迷う・例外', '暗黙のコツ', '教え方', '再現性ルート'];
     const rows = tasks.map(t => {
       const d = t.mmmDetails || {};
+      const tacit = t.tacit || {};
       const mmmText = (t.mmm || []).map(m => {
         const key = m === 'ムリ' ? 'muri' : m === 'ムダ' ? 'muda' : 'mura';
         return d[key] ? `【${m}】${d[key]}` : m;
       }).join('　');
       return [
-        t.code || '', t.category || '', t.content || '', t.person || '', t.target || '', t.method || '',
+        t.code || '', t.category || '', t.workType || '未判定', t.content || '', t.person || '', t.target || '', t.method || '',
         t.timeRequired || '', t.timeUnit || '分', t.freqType || '', t.freqCount || '',
-        Math.round(calcMonthlyTime(t)), t.tools || '', (t.mmm || []).join('・') || '', mmmText
+        Math.round(calcMonthlyTime(t)), t.tools || '', (t.mmm || []).join('・') || '', mmmText,
+        tacit.judgeWhat || '', tacit.judgeCriteria || '', tacit.judgeException || '', tacit.tacitTips || '', tacit.teachWay || '',
+        t.reproRoute === 'A' ? 'A（形式知化）' : t.reproRoute === 'B' ? 'B（教育）' : ''
       ];
     });
     const ws = XLSX.utils.aoa_to_sheet([header, ...rows]);
-    ws['!cols'] = [{ wch: 10 }, { wch: 12 }, { wch: 30 }, { wch: 10 }, { wch: 15 }, { wch: 20 }, { wch: 8 }, { wch: 5 }, { wch: 8 }, { wch: 6 }, { wch: 10 }, { wch: 15 }, { wch: 15 }, { wch: 40 }];
+    ws['!cols'] = [{ wch: 10 }, { wch: 12 }, { wch: 8 }, { wch: 30 }, { wch: 10 }, { wch: 15 }, { wch: 20 }, { wch: 8 }, { wch: 5 }, { wch: 8 }, { wch: 6 }, { wch: 10 }, { wch: 15 }, { wch: 15 }, { wch: 40 }, { wch: 25 }, { wch: 25 }, { wch: 25 }, { wch: 25 }, { wch: 25 }, { wch: 12 }];
     XLSX.utils.book_append_sheet(wb, ws, '業務一覧');
   }
 
@@ -2780,6 +3339,8 @@
         id: genId(),
         category: cat,
         code,
+        workType: item.workType || '未判定',
+        tacit: null,
         content: item.content,
         person: item.person || '',
         target: item.target || '',
@@ -2996,7 +3557,7 @@
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `bpi_navi_export_${new Date().toISOString().split('T')[0]}.json`;
+    a.download = `kata_navi_export_${new Date().toISOString().split('T')[0]}.json`;
     a.click();
     URL.revokeObjectURL(url);
     showToast('データをエクスポートしました', 'success');
@@ -3321,7 +3882,7 @@
 
   /** 全データ保存 */
   function fileSaveAll() {
-    downloadJson(appData, `bpi_navi_全データ_${today()}.json`);
+    downloadJson(appData, `kata_navi_全データ_${today()}.json`);
     showToast('全データをファイルに保存しました', 'success');
   }
 
@@ -3333,13 +3894,13 @@
     const companyProjects = appData.projects.filter(p => p.company === company);
     const companyInfo = (appData.companies || {})[company] || {};
     const exportData = {
-      _type: 'bpi_company',
+      _type: 'kata_company',
       _version: 1,
       company: company,
       companyInfo: companyInfo,
       projects: companyProjects
     };
-    downloadJson(exportData, `bpi_company_${sanitizeFilename(company)}_${today()}.json`);
+    downloadJson(exportData, `kata_company_${sanitizeFilename(company)}_${today()}.json`);
     showToast(`「${company}」の${companyProjects.length}件のプロジェクトを保存しました`, 'success');
   }
 
@@ -3348,11 +3909,11 @@
     const proj = getCurrentProject();
     if (!proj) { showToast('プロジェクトが選択されていません', 'error'); return; }
     const exportData = {
-      _type: 'bpi_project',
+      _type: 'kata_project',
       _version: 1,
       project: proj
     };
-    const fname = `bpi_project_${sanitizeFilename(proj.company)}_${sanitizeFilename(proj.name)}_${today()}.json`;
+    const fname = `kata_project_${sanitizeFilename(proj.company)}_${sanitizeFilename(proj.name)}_${today()}.json`;
     downloadJson(exportData, fname);
     showToast(`「${proj.name}」を保存しました`, 'success');
   }
@@ -3399,16 +3960,16 @@
     readJsonFile('#loadProjectInput', (imported, filename) => {
       let projects = [];
 
-      if (imported._type === 'bpi_company' && imported.projects) {
-        // 企業単位ファイル
+      if ((imported._type === 'kata_company' || imported._type === 'bpi_company') && imported.projects) {
+        // 企業単位ファイル（旧 BPI Navi ファイルも互換読込）
         projects = imported.projects;
         // 企業情報も取り込む
         if (imported.companyInfo && imported.company) {
           if (!appData.companies) appData.companies = {};
           appData.companies[imported.company] = imported.companyInfo;
         }
-      } else if (imported._type === 'bpi_project' && imported.project) {
-        // プロジェクト単体ファイル
+      } else if ((imported._type === 'kata_project' || imported._type === 'bpi_project') && imported.project) {
+        // プロジェクト単体ファイル（旧 BPI Navi ファイルも互換読込）
         projects = [imported.project];
       } else if (imported.projects && imported.projects.length > 0) {
         // 全データ形式 — 企業情報もあれば取り込む
@@ -3564,7 +4125,56 @@
 
     // --- ヘルパー関数 ---
     const allTasks = [...ord, ...pln, ...mfg, ...qc, ...shp];
-    allTasks.forEach(t => { t.ecrs = null; });
+    allTasks.forEach(t => { t.ecrs = null; t.workType = '作業'; t.tacit = null; });
+
+    // --- デモデータの workType / tacit 後付け ---
+    // 主な「感覚（判断業務）」と「混在（一部経験依存）」を指定
+    const workTypeMap = {
+      // 受注：見積積算・クレーム初動対応は経験依存
+      'ORD-002': '混在', 'ORD-003': '混在', 'ORD-004': '感覚', 'ORD-014': '感覚',
+      // 生産管理：計画立案・調整・遅延検知は典型的な感覚業務
+      'PLN-001': '混在', 'PLN-002': '感覚', 'PLN-003': '感覚', 'PLN-008': '感覚', 'PLN-009': '感覚', 'PLN-016': '混在',
+      // 製造：プログラム作成・初品・砥石交換・再研削可否・仕上げ・不良原因・OJTは感覚
+      'MFG-001': '混在', 'MFG-002': '感覚', 'MFG-003': '感覚', 'MFG-005': '感覚', 'MFG-006': '感覚', 'MFG-007': '感覚', 'MFG-013': '感覚', 'MFG-016': '感覚', 'MFG-017': '感覚',
+      // 品質管理：QC-007不適合判断・QC-008クレーム調査・QC-016仕入先評価は感覚
+      'QC-003': '混在', 'QC-007': '感覚', 'QC-008': '感覚', 'QC-016': '感覚',
+      // 出荷：梱包・通関書類・スケジュール優先順位は感覚／混在
+      'SHP-004': '感覚', 'SHP-014': '感覚', 'SHP-015': '混在'
+    };
+    const tacitMap = {
+      'ORD-004': { judgeWhat: '加工難易度・材料費・所要工数・類似品の過去実績', judgeCriteria: '類似品との形状差15%以内なら過去単価を基準、それ以上は工数積上', judgeException: '新規顧客や特殊鋼材は技術部門に相談', tacitTips: '工数係数は段取り時間と歩留まりを必ず加味', teachWay: 'ベテラン同行3ヶ月＋見積レビュー会で養成' },
+      'ORD-014': { judgeWhat: '顧客の声色・要求の緊急度・過去のクレーム履歴', judgeCriteria: '即時対応必要か翌日でよいか、訪問要否を判断', judgeException: 'キーアカウントや初回クレームは即訪問', tacitTips: 'まず謝罪より事実確認から入る', teachWay: 'ロールプレイ研修＋同行訪問' },
+      'PLN-002': { judgeWhat: '受注残・見込・在庫・機械稼働率・季節要因', judgeCriteria: '機械別の負荷100%以下を維持、納期遵守率95%以上', judgeException: '大口注文・新規顧客・夏休前後の見極め', tacitTips: '機械の故障履歴と保全予定を頭に入れる', teachWay: '主任の隣で半年OJT、月次レビューで議論' },
+      'PLN-003': { judgeWhat: '機械別の稼働状況・段取り順序・作業者スキル', judgeCriteria: '段取り回数を最小化し、同一治具グループでまとめる', judgeException: '故障や急ぎ注文で並び替え', tacitTips: '段取り時間の短い順に並べると稼働率が上がる', teachWay: '副主任とペア作業、週次振り返り' },
+      'PLN-008': { judgeWhat: '受注残一覧・進捗実績・機械稼働状況', judgeCriteria: '完了予定日−3日でリスクと判断', judgeException: '長納期品や特殊材料は早期警戒', tacitTips: '前工程の滞留も含めて見ること', teachWay: '主任の判断基準を週次でレビュー' },
+      'PLN-009': { judgeWhat: '特急品の納期・受注金額・顧客重要度', judgeCriteria: '既存計画の遅延が3日以内に収まるか', judgeException: 'キーアカウントは原則受諾', tacitTips: '機械の隙間時間を活用する案を先に検討', teachWay: '判断事例集を作成して共有' },
+      'MFG-002': { judgeWhat: '工具形状・材質・加工条件・類似品プログラム', judgeCriteria: '工具寿命と加工精度のバランス', judgeException: '特殊形状・新材質は試作必要', tacitTips: '送り速度は経験値で微調整', teachWay: 'CAMソフト習得後にベテランとペアプロ' },
+      'MFG-003': { judgeWhat: '初品の寸法・表面状態・刃先形状', judgeCriteria: '公差中心値±50%以内に入れる', judgeException: '新規プログラムは複数回試削り', tacitTips: '音と切粉の色を併せて判断', teachWay: 'OJTで初品判定の同席を繰り返す' },
+      'MFG-005': { judgeWhat: '砥石の摩耗・目詰まり・加工音・面粗さ', judgeCriteria: '面粗さRa0.8以上または異音発生で交換', judgeException: '硬質材は早めに交換', tacitTips: '砥石の音と火花の色で見極める', teachWay: '交換前後の音をサンプル収集して教育' },
+      'MFG-006': { judgeWhat: '工具の摩耗状態・刃先欠け・全長残り', judgeCriteria: '残量30%以上で再研削可', judgeException: '材質劣化があれば廃棄', tacitTips: 'マイクロスコープで刃先の微細欠けを確認', teachWay: 'OK/NG事例の写真集を整備' },
+      'MFG-007': { judgeWhat: '刃先の鋭利さ・バリの有無・鏡面光沢', judgeCriteria: '指触でバリゼロ、目視で光沢均一', judgeException: '高精度品はマイクロスコープ確認', tacitTips: '研磨ストロークの方向で仕上がりが変わる', teachWay: '見本品との比較研修' },
+      'MFG-013': { judgeWhat: '不良品の状態・加工条件・前工程の記録', judgeCriteria: '同一不良が3件以上で工程要因', judgeException: '突発不良は機械点検優先', tacitTips: '不良品を並べると傾向が見える', teachWay: '不良事例DBで月次教育' },
+      'MFG-016': { judgeWhat: '新人の理解度・作業精度・質問内容', judgeCriteria: '同じ品を1人で再現できれば次の工程へ', judgeException: '苦手工程は再OJT', tacitTips: 'やってみせ→説明→やらせる→ふりかえる', teachWay: '指導記録シートで進捗管理' },
+      'MFG-017': { judgeWhat: '材質・形状・前回の成功条件', judgeCriteria: 'チップ寿命と面粗さのバランス', judgeException: '新材質は試削り必須', tacitTips: 'ノートに切粉の色も記録するとよい', teachWay: '個人ノートを共通DB化する取組中' },
+      'QC-007': { judgeWhat: '不適合の重大度・顧客影響・再発可能性', judgeCriteria: '重大度ABCの3段階判定基準', judgeException: '顧客指定品は厳格化', tacitTips: '過去の類似案件と比較する', teachWay: '判定会議に若手を同席させる' },
+      'QC-008': { judgeWhat: 'クレーム内容・該当ロット・製造条件・検査記録', judgeCriteria: '5なぜで真因まで掘る', judgeException: '初回クレームは現地確認', tacitTips: '顧客の言葉の裏の本当の困りごとを聞く', teachWay: 'クレーム回答書のレビュー研修' },
+      'QC-016': { judgeWhat: '不良率・納期遵守率・対応速度・コミュニケーション', judgeCriteria: 'A〜Dの4段階評価', judgeException: '専門分野は別基準', tacitTips: '数字に表れない誠実さも評価軸', teachWay: '評価会議で議論を重ねる' },
+      'SHP-004': { judgeWhat: '製品形状・刃先位置・輸送距離・季節', judgeCriteria: '刃先は二重梱包、長距離は専用緩衝材', judgeException: '輸出は通関対応も考慮', tacitTips: '冬季は結露対策、夏季は段ボール強度', teachWay: '梱包写真集で標準化推進' },
+      'SHP-014': { judgeWhat: '製品の用途・材質・HSコード・原産地', judgeCriteria: 'HSコード分類の優先順位', judgeException: '新規仕向地は税関に事前確認', tacitTips: '過去の通関事例を参照', teachWay: '貿易実務研修＋OJT' },
+      'SHP-015': { judgeWhat: '顧客重要度・納期・出荷リソース', judgeCriteria: 'キー顧客→納期短→大口の順', judgeException: '営業からの特急依頼は協議', tacitTips: '当日中に処理可能な件数を逆算', teachWay: '判断ログを記録して共有' }
+    };
+    allTasks.forEach(t => {
+      if (workTypeMap[t.code]) t.workType = workTypeMap[t.code];
+      if (tacitMap[t.code]) t.tacit = tacitMap[t.code];
+    });
+
+    // 再現性ルートを一部に事前設定（デモ用）
+    const reproRouteMap = {
+      'MFG-002': 'A', 'MFG-005': 'A', 'MFG-006': 'A',  // 形式知化（測定で数値化できそうな業務）
+      'MFG-016': 'B', 'QC-008': 'B', 'PLN-009': 'B',  // 教育（数値化困難・事例共有型）
+      'ORD-014': 'B', 'SHP-014': 'B'
+    };
+    allTasks.forEach(t => { if (reproRouteMap[t.code]) t.reproRoute = reproRouteMap[t.code]; });
 
     // ムリ・ムダ・ムラを各タスクに個別割当（最大1つ、なしもあり）
     const mmmAssign = {
@@ -3665,6 +4275,24 @@
         t.mmmDetails = { muri: '', muda: '', mura: '' };
       }
     });
+
+    // 「問題なし」のサンプル業務（Step2の「問題ありのみ」フィルタの効果を見せるためのデモ用）
+    // 標準化済み・うまく回っている定型業務という想定
+    const problemlessCodes = new Set([
+      'ORD-006', 'ORD-010', 'ORD-013',   // 受注：FAX/メール送付、納期連絡、月次集計（運用安定中）
+      'PLN-013', 'PLN-014',              // 生産管理：入出庫・月次集計（既存運用で問題顕在化なし）
+      'MFG-004', 'MFG-014',              // 製造：本加工、5S清掃（標準化済みの定型）
+      'QC-011',                          // 品質：日常点検（点検表で運用）
+      'SHP-003', 'SHP-006'               // 出荷：検品、運送手配（運用安定）
+    ]);
+    allTasks.forEach(t => {
+      if (!problemlessCodes.has(t.code)) return;
+      t.problems = [];
+      t.mmm = [];
+      t.mmmDetails = { muri: '', muda: '', mura: '' };
+      t.notes = '現状大きな問題なし。引き続き安定運用中。';
+    });
+
     const byCode = (code) => { const t = allTasks.find(x => x.code === code); return t ? t.id : null; };
 
     // --- ECRS判定をタスクに適用 ---
@@ -3845,15 +4473,17 @@
 
   // ==========================================
   // グローバルAPI（onclick用）
+  // 後方互換のため window.BPI と window.KATA の両方を提供
   // ==========================================
-  window.BPI = {
+  const globalAPI = {
     editTask: (id) => openTaskModal(id),
     deleteTask: (id) => deleteTask(id),
     moveTask: (id, dir) => moveTask(id, dir),
     renumberCodes: () => { const p = getCurrentProject(); if (p) renumberTaskCodes(p); },
     openImprovementModal: (taskId, ecrsKey) => openImprovementModal(taskId, ecrsKey),
-    updateImpStatus: (taskId, ecrsKey, status) => updateImpStatus(taskId, ecrsKey, status),
-    openMeasureModal: (taskId, ecrsKey) => openMeasureModal(taskId, ecrsKey),
+    openReproPlan: (taskId, route) => openReproPlan(taskId, route),
+    updateImpStatus: (taskId, planKey, status) => updateImpStatus(taskId, planKey, status),
+    openMeasureModal: (taskId, planKey) => openMeasureModal(taskId, planKey),
     loadDemo: () => { appData = generateDemoData(); saveData(appData); location.reload(); },
     toggleDemoPreview: () => toggleDemoPreview(),
     exitDemoPreview: () => exitDemoPreview(),
@@ -3862,14 +4492,158 @@
     openCompanyModal: (name) => openCompanyModal(name),
     openNewProjectModal: (company) => openNewProjectModal(company),
     printReport: () => { buildPrintReport(); setTimeout(() => window.print(), 400); },
-    exportExcel: () => exportExcel()
+    exportExcel: () => exportExcel(),
+    startTour: () => startTour()
   };
+  window.KATA = globalAPI;
+  window.BPI = globalAPI;
+
+  // ==========================================
+  // インタラクティブツアー
+  // ==========================================
+  const TOUR_STEPS = [
+    {
+      target: '#sidebar',
+      title: 'サイドバーナビゲーション',
+      desc: 'ここから各改善ステップにアクセスできます。5つのステップを順番に進めて、業務プロセスを体系的に改善していきましょう。',
+      position: 'right'
+    },
+    {
+      target: '#navDemoPreview',
+      title: 'デモデータで体験',
+      desc: 'まずはデモデータで操作を体験してみましょう。架空の製造業企業のサンプルデータで、全機能を閲覧専用でお試しできます。',
+      position: 'right'
+    },
+    {
+      target: '[data-view="step1"]',
+      title: 'Step 1: 業務の洗い出し',
+      desc: '「誰が・何を・どうやって・どのくらい」で業務を棚卸しします。CSVインポートやAIアシストで効率的に入力できます。',
+      position: 'right'
+    },
+    {
+      target: '[data-view="step2"]',
+      title: 'Step 2: 問題点の分析',
+      desc: '各業務の問題をスコアリングし、パレート図やヒートマップで可視化。改善すべき業務の優先順位が一目でわかります。',
+      position: 'right'
+    },
+    {
+      target: '[data-view="step3"]',
+      title: 'Step 3〜5: 改善ルートの選定〜効果検証',
+      desc: '作業はECRSで効率化、感覚はルートA（形式知化）/ルートB（教育）で再現性を高めます。両方を同じ画面で管理し、効果を測定します。',
+      position: 'right'
+    },
+    {
+      target: '.topbar-actions',
+      title: '保存・読込',
+      desc: 'データはブラウザに自動保存されます。JSON形式で書き出し・読み込みも可能。複数企業・複数プロジェクトを管理できます。',
+      position: 'bottom'
+    }
+  ];
+
+  let tourStep = 0;
+
+  function startTour() {
+    tourStep = 0;
+    const overlay = $('#tourOverlay');
+    overlay.style.display = '';
+    showTourStep();
+
+    // イベント
+    $('#tourNext').onclick = () => {
+      tourStep++;
+      if (tourStep >= TOUR_STEPS.length) {
+        endTour();
+      } else {
+        showTourStep();
+      }
+    };
+    $('#tourPrev').onclick = () => {
+      if (tourStep > 0) {
+        tourStep--;
+        showTourStep();
+      }
+    };
+    $('#tourClose').onclick = endTour;
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay || e.target === overlay.querySelector('::before')) {
+        // クリック位置がツールチップやハイライト外ならスキップ
+      }
+    });
+  }
+
+  function showTourStep() {
+    const step = TOUR_STEPS[tourStep];
+    const el = document.querySelector(step.target);
+    if (!el) { tourStep++; if (tourStep < TOUR_STEPS.length) showTourStep(); else endTour(); return; }
+
+    const rect = el.getBoundingClientRect();
+    const highlight = $('#tourHighlight');
+    const tooltip = $('#tourTooltip');
+    const pad = 6;
+
+    highlight.style.top = (rect.top - pad) + 'px';
+    highlight.style.left = (rect.left - pad) + 'px';
+    highlight.style.width = (rect.width + pad * 2) + 'px';
+    highlight.style.height = (rect.height + pad * 2) + 'px';
+
+    $('#tourTitle').textContent = step.title;
+    $('#tourDesc').textContent = step.desc;
+    $('#tourStepIndicator').textContent = `${tourStep + 1} / ${TOUR_STEPS.length}`;
+    $('#tourPrev').style.display = tourStep > 0 ? '' : 'none';
+    $('#tourNext').textContent = tourStep === TOUR_STEPS.length - 1 ? '完了' : '次へ';
+
+    // ツールチップ位置
+    const tw = 340;
+    let ttop, tleft;
+    if (step.position === 'right') {
+      ttop = Math.max(16, rect.top);
+      tleft = rect.right + 16;
+      if (tleft + tw > window.innerWidth) {
+        tleft = Math.max(16, rect.left - tw - 16);
+      }
+    } else {
+      ttop = rect.bottom + 12;
+      tleft = Math.max(16, Math.min(rect.left, window.innerWidth - tw - 16));
+    }
+    // 画面下部にはみ出す場合
+    if (ttop + 200 > window.innerHeight) {
+      ttop = Math.max(16, rect.top - 200);
+    }
+    tooltip.style.top = ttop + 'px';
+    tooltip.style.left = tleft + 'px';
+
+    // アニメーションリセット
+    tooltip.style.animation = 'none';
+    tooltip.offsetHeight;
+    tooltip.style.animation = '';
+  }
+
+  function endTour() {
+    $('#tourOverlay').style.display = 'none';
+    try { localStorage.setItem('kataNavi_tourDone', '1'); } catch(e) {}
+  }
 
   // ==========================================
   // 初期化
   // ==========================================
   function init() {
     initEventListeners();
+
+    // ウェルカム画面の新規プロジェクトボタン
+    const btnWelcome = $('#btnWelcomeNewProject');
+    if (btnWelcome) {
+      btnWelcome.addEventListener('click', () => {
+        openNewProjectModal();
+      });
+    }
+
+    // ツアー開始ボタン
+    const btnTour = $('#btnStartTour');
+    if (btnTour) {
+      btnTour.addEventListener('click', () => {
+        startTour();
+      });
+    }
 
     // 保存されたプロジェクトがある場合
     if (appData.currentProjectId) {
@@ -3881,6 +4655,11 @@
     }
 
     navigate('dashboard');
+
+    // 初回訪問時に自動ツアー（プロジェクト0件 かつ ツアー未完了）
+    if (appData.projects.length === 0 && !localStorage.getItem('kataNavi_tourDone')) {
+      // 少し待ってからウェルカム画面のアニメーション後にツアーは自動起動しない（ボタンで起動に変更）
+    }
   }
 
   // DOM読み込み完了後に初期化
