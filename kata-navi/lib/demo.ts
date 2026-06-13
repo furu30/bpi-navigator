@@ -115,6 +115,7 @@ const SEED: DemoSeed[] = [
 /** デモ初期状態を生成 */
 export function demoState(): AppState {
   return {
+    company: "(株)KK精工",
     tasks: SEED.map((s) => ({ id: uid(), ...s })),
     plans: [],
     masters: defaultMasters(),

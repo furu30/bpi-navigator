@@ -69,6 +69,7 @@ export interface Masters {
 }
 
 export interface AppState {
+  company: string; // 会社名（クライアント名）。設定・マスタ画面で編集
   tasks: Task[];
   plans: Plan[];
   masters: Masters;

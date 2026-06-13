@@ -19,6 +19,7 @@ function downloadJSON(filename: string, data: unknown) {
 /** 全体（全業務名）をエクスポート */
 export function exportAll(state: AppState) {
   downloadJSON("kata-navi-appA-all.json", {
+    company: state.company,
     tasks: state.tasks,
     plans: state.plans,
     masters: state.masters,
@@ -65,7 +66,9 @@ export function parseImport(text: string): ParseResult {
   }
   // 全体ファイル
   if (Array.isArray(obj.tasks) && Array.isArray(obj.plans)) {
-    return { kind: "full", data: obj as unknown as AppState };
+    const data = obj as unknown as AppState;
+    if (typeof data.company !== "string") data.company = "";
+    return { kind: "full", data };
   }
   return { kind: "error", message: "読み込めない形式です。" };
 }

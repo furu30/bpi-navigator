@@ -17,9 +17,10 @@ function loadState(): AppState {
     if (raw) {
       const data = JSON.parse(raw);
       if (data && Array.isArray(data.tasks) && Array.isArray(data.plans)) {
-        // masters が欠けている古い保存にも備える
+        // 古い保存にも備えて欠けている項目を補完する
         if (!data.masters) data.masters = demoState().masters;
         if (data.currentGroup === undefined) data.currentGroup = null;
+        if (typeof data.company !== "string") data.company = "";
         return data as AppState;
       }
     }
@@ -53,6 +54,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       /* 容量超過などは無視 */
     }
   }, [state, hydrated]);
+
+  const setCompany = useCallback((company: string) => {
+    setState((prev) => ({ ...prev, company }));
+  }, []);
 
   const setCurrentGroup = useCallback((group: string | null) => {
     setState((prev) => ({ ...prev, currentGroup: group }));
@@ -149,6 +154,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const value: StoreContextValue = {
     state,
     hydrated,
+    setCompany,
     setCurrentGroup,
     addGroup,
     addTask,

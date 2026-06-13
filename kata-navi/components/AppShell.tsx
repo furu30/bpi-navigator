@@ -127,9 +127,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <h1 className="text-[17px] font-extrabold">{titleFor(pathname)}</h1>
           <div className="flex items-center gap-3.5">
             {!isHome && <GroupSwitcher />}
-            <span className="rounded-full bg-[var(--blue-soft)] px-[11px] py-1 text-[11.5px] text-[var(--muted)]">
-              🔍 試作版（(株)KK精工）
-            </span>
+            <Link
+              href="/settings"
+              title="設定・マスタで会社名を変更"
+              className="rounded-full bg-[var(--blue-soft)] px-[11px] py-1 text-[11.5px] text-[var(--muted)] hover:bg-[var(--blue-line)]"
+            >
+              🏢 {state.company?.trim() ? state.company : "会社名 未設定"}
+            </Link>
           </div>
         </div>
         <div className="mx-auto w-full max-w-[980px] px-[30px] py-[26px]">

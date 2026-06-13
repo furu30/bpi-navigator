@@ -19,6 +19,8 @@ export interface StoreContextValue {
   state: AppState;
   /** localStorageからの復元完了フラグ（SSRハイドレーション対策） */
   hydrated: boolean;
+  /** 会社名（クライアント名）を設定 */
+  setCompany: (company: string) => void;
   /** 表示中の業務名を切り替える（null = すべての業務名／全体一覧） */
   setCurrentGroup: (group: string | null) => void;
   /** 新しい業務名を作成し、その業務名を選択状態にする */
