@@ -1,0 +1,47 @@
+@import "tailwindcss";
+
+/* ===== KATA Navi デザイントークン（試作HTMLの配色を踏襲） ===== */
+:root {
+  --navy: #1e293b;
+  --blue: #2563eb;
+  --blue-d: #1d4ed8;
+  --blue-soft: #eff6ff;
+  --blue-line: #bfdbfe;
+  --ink: #0f172a;
+  --muted: #64748b;
+  --line: #e2e8f0;
+  --bg: #f8fafc;
+  --white: #fff;
+  --green: #16a34a;
+  --red: #dc2626;
+  --amber: #d97706;
+}
+
+@theme inline {
+  --color-navy: var(--navy);
+  --color-blue: var(--blue);
+  --color-blue-d: var(--blue-d);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-bg: var(--bg);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  padding: 0;
+  margin: 0;
+}
+
+body {
+  font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", system-ui,
+    sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 1.7;
+}
