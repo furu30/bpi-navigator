@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useRef } from "react";
+import { exportAll, parseImport } from "@/lib/io";
 import { useStore } from "@/lib/store";
 import { GroupSwitcher } from "./GroupSwitcher";
 
@@ -48,8 +50,25 @@ function isActive(pathname: string, href: string): boolean {
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { resetDemo } = useStore();
+  const { state, resetDemo, replaceState, mergeGroupFile } = useStore();
   const isHome = pathname === "/";
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  function handleImport(file: File | undefined) {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = parseImport(String(reader.result));
+      if (result.kind === "error") {
+        window.alert(result.message);
+        return;
+      }
+      if (result.kind === "group") mergeGroupFile(result.data);
+      else replaceState(result.data);
+      window.alert("読み込みました。");
+    };
+    reader.readAsText(file);
+  }
 
   return (
     <div className="flex min-h-screen">
@@ -71,14 +90,32 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <NavSection label="改善の流れ" items={FLOW_NAV} pathname={pathname} />
 
         <div className="mt-auto flex flex-wrap gap-2 border-t border-[#334155] px-4 py-[14px]">
-          <FootButton label="💾 保存" disabled title="ステップ4で実装予定" />
-          <FootButton label="📂 読込" disabled title="ステップ4で実装予定" />
+          <FootButton
+            label="💾 保存"
+            title="全体（全業務名）をJSONで保存"
+            onClick={() => exportAll(state)}
+          />
+          <FootButton
+            label="📂 読込"
+            title="JSONを読み込み（全体／業務名ファイル）"
+            onClick={() => fileInputRef.current?.click()}
+          />
           <FootButton
             label="↺ デモ初期化"
             onClick={() => {
               if (window.confirm("デモデータに戻します。よろしいですか？")) {
                 resetDemo();
               }
+            }}
+          />
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".json"
+            className="hidden"
+            onChange={(e) => {
+              handleImport(e.target.files?.[0]);
+              e.target.value = "";
             }}
           />
         </div>

@@ -51,6 +51,18 @@ export interface ProblemCategory {
   desc?: string;
 }
 
+/** 業務追加・編集モーダルが扱う入力項目（id/problems/scores等はstore側で補完） */
+export interface TaskInput {
+  group: string;
+  content: string;
+  person: string;
+  time: number;
+  freq: Freq;
+  workType: WorkType;
+  category: string;
+  mmm: { muri: boolean; muda: boolean; mura: boolean };
+}
+
 export interface Masters {
   processCategories: string[];
   problemCategories: ProblemCategory[];

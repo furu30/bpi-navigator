@@ -4,9 +4,16 @@
 // 実体のProviderは components/StoreProvider.tsx。CRUDはステップ4以降で拡張する。
 
 import { createContext, useContext } from "react";
-import type { AppState, Plan, Task } from "./types";
+import type { AppState, Plan, Task, TaskInput } from "./types";
 
 export const LS_KEY = "kata-navi-appA";
+
+/** 業務名ファイル（業務名単位の保存／読込）の形 */
+export interface GroupFile {
+  group: string;
+  tasks: Task[];
+  plans: Plan[];
+}
 
 export interface StoreContextValue {
   state: AppState;
@@ -16,6 +23,18 @@ export interface StoreContextValue {
   setCurrentGroup: (group: string | null) => void;
   /** 新しい業務名を作成し、その業務名を選択状態にする */
   addGroup: (name: string) => void;
+  /** 業務（作業）を追加 */
+  addTask: (input: TaskInput) => void;
+  /** 業務（作業）を編集（入力項目のみ更新。problems/scores/ecrsは保持） */
+  updateTask: (id: string, input: TaskInput) => void;
+  /** 業務（作業）を削除（関連する改善計画も併せて削除） */
+  deleteTask: (id: string) => void;
+  /** 業務名の名称変更（その業務名の全作業を付け替え） */
+  renameGroup: (oldName: string, newName: string) => void;
+  /** 業務名の削除（その業務名の作業＋関連plansを削除） */
+  deleteGroup: (name: string) => void;
+  /** 業務名ファイルを取り込む（同名業務名は置換し、その業務名を選択） */
+  mergeGroupFile: (file: GroupFile) => void;
   /** 状態を丸ごと差し替える（JSON読込・デモ初期化などで使用） */
   replaceState: (next: AppState) => void;
   /** デモデータに戻す */
@@ -53,5 +72,13 @@ export function curTasks(state: AppState): Task[] {
 /** 現在の業務名に紐づく改善計画。 */
 export function curPlans(state: AppState): Plan[] {
   const ids = new Set(curTasks(state).map((t) => t.id));
+  return state.plans.filter((p) => ids.has(p.taskId));
+}
+
+/** 指定した業務名に紐づく改善計画。 */
+export function groupPlans(state: AppState, group: string): Plan[] {
+  const ids = new Set(
+    state.tasks.filter((t) => t.group === group).map((t) => t.id),
+  );
   return state.plans.filter((p) => ids.has(p.taskId));
 }

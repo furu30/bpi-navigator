@@ -1,9 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { demoState } from "@/lib/demo";
-import { LS_KEY, StoreContext, type StoreContextValue } from "@/lib/store";
-import type { AppState } from "@/lib/types";
+import { demoState, uid } from "@/lib/demo";
+import {
+  type GroupFile,
+  LS_KEY,
+  StoreContext,
+  type StoreContextValue,
+} from "@/lib/store";
+import type { AppState, TaskInput } from "@/lib/types";
 
 /** localStorageから状態を復元。壊れている／無いときはデモデータ。 */
 function loadState(): AppState {
@@ -59,6 +64,80 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setState((prev) => ({ ...prev, currentGroup: g }));
   }, []);
 
+  const addTask = useCallback((input: TaskInput) => {
+    setState((prev) => ({
+      ...prev,
+      tasks: [
+        ...prev.tasks,
+        {
+          id: uid(),
+          ...input,
+          problems: [],
+          scores: { impact: 3, freq: 3 },
+        },
+      ],
+    }));
+  }, []);
+
+  const updateTask = useCallback((id: string, input: TaskInput) => {
+    setState((prev) => ({
+      ...prev,
+      // problems / scores / ecrs は編集対象外なので保持する
+      tasks: prev.tasks.map((t) => (t.id === id ? { ...t, ...input } : t)),
+    }));
+  }, []);
+
+  const deleteTask = useCallback((id: string) => {
+    setState((prev) => ({
+      ...prev,
+      tasks: prev.tasks.filter((t) => t.id !== id),
+      plans: prev.plans.filter((p) => p.taskId !== id),
+    }));
+  }, []);
+
+  const renameGroup = useCallback((oldName: string, newName: string) => {
+    const next = newName.trim();
+    if (!next || next === oldName) return;
+    setState((prev) => ({
+      ...prev,
+      tasks: prev.tasks.map((t) =>
+        t.group === oldName ? { ...t, group: next } : t,
+      ),
+      currentGroup: prev.currentGroup === oldName ? next : prev.currentGroup,
+    }));
+  }, []);
+
+  const deleteGroup = useCallback((name: string) => {
+    setState((prev) => {
+      const removedIds = new Set(
+        prev.tasks.filter((t) => t.group === name).map((t) => t.id),
+      );
+      return {
+        ...prev,
+        tasks: prev.tasks.filter((t) => t.group !== name),
+        plans: prev.plans.filter((p) => !removedIds.has(p.taskId)),
+        currentGroup: prev.currentGroup === name ? null : prev.currentGroup,
+      };
+    });
+  }, []);
+
+  const mergeGroupFile = useCallback((file: GroupFile) => {
+    setState((prev) => {
+      // 同名業務名の作業・関連plansを除去し、ファイル側で置換する
+      const incomingTaskIds = new Set(file.tasks.map((t) => t.id));
+      const keptTasks = prev.tasks.filter((t) => t.group !== file.group);
+      const keptPlans = prev.plans.filter(
+        (p) => !incomingTaskIds.has(p.taskId),
+      );
+      return {
+        ...prev,
+        tasks: [...keptTasks, ...file.tasks],
+        plans: [...keptPlans, ...(file.plans ?? [])],
+        currentGroup: file.group,
+      };
+    });
+  }, []);
+
   const replaceState = useCallback((next: AppState) => {
     setState(next);
   }, []);
@@ -72,6 +151,12 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     hydrated,
     setCurrentGroup,
     addGroup,
+    addTask,
+    updateTask,
+    deleteTask,
+    renameGroup,
+    deleteGroup,
+    mergeGroupFile,
     replaceState,
     resetDemo,
   };
