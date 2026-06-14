@@ -8,7 +8,7 @@ import {
   StoreContext,
   type StoreContextValue,
 } from "@/lib/store";
-import type { AppState, TaskInput } from "@/lib/types";
+import type { AppState, Ecrs, PlanInput, TaskInput } from "@/lib/types";
 
 /** localStorageから状態を復元。壊れている／無いときはデモデータ。 */
 function loadState(): AppState {
@@ -100,6 +100,53 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     }));
   }, []);
 
+  const setScore = useCallback(
+    (id: string, key: "impact" | "freq", value: number) => {
+      setState((prev) => ({
+        ...prev,
+        tasks: prev.tasks.map((t) =>
+          t.id === id ? { ...t, scores: { ...t.scores, [key]: value } } : t,
+        ),
+      }));
+    },
+    [],
+  );
+
+  const toggleProblem = useCallback((id: string, problem: string) => {
+    setState((prev) => ({
+      ...prev,
+      tasks: prev.tasks.map((t) => {
+        if (t.id !== id) return t;
+        const has = t.problems.includes(problem);
+        return {
+          ...t,
+          problems: has
+            ? t.problems.filter((p) => p !== problem)
+            : [...t.problems, problem],
+        };
+      }),
+    }));
+  }, []);
+
+  const setEcrs = useCallback((id: string, key: Ecrs) => {
+    setState((prev) => ({
+      ...prev,
+      tasks: prev.tasks.map((t) =>
+        t.id === id ? { ...t, ecrs: t.ecrs === key ? undefined : key } : t,
+      ),
+    }));
+  }, []);
+
+  const addPlan = useCallback((input: PlanInput) => {
+    setState((prev) => ({
+      ...prev,
+      plans: [
+        ...prev.plans,
+        { id: uid(), ...input, status: "未着手", afterMonthly: null },
+      ],
+    }));
+  }, []);
+
   const renameGroup = useCallback((oldName: string, newName: string) => {
     const next = newName.trim();
     if (!next || next === oldName) return;
@@ -160,6 +207,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     addTask,
     updateTask,
     deleteTask,
+    setScore,
+    toggleProblem,
+    setEcrs,
+    addPlan,
     renameGroup,
     deleteGroup,
     mergeGroupFile,

@@ -51,6 +51,17 @@ export interface ProblemCategory {
   desc?: string;
 }
 
+/** 改善計画モーダルが扱う入力項目（id/status/afterMonthlyはstore側で補完） */
+export interface PlanInput {
+  taskId: string;
+  taskName: string;
+  content: string;
+  person: string;
+  date: string;
+  method?: string;
+  effect?: string;
+}
+
 /** 業務追加・編集モーダルが扱う入力項目（id/problems/scores等はstore側で補完） */
 export interface TaskInput {
   group: string;

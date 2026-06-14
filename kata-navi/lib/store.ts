@@ -4,7 +4,7 @@
 // 実体のProviderは components/StoreProvider.tsx。CRUDはステップ4以降で拡張する。
 
 import { createContext, useContext } from "react";
-import type { AppState, Plan, Task, TaskInput } from "./types";
+import type { AppState, Ecrs, Plan, PlanInput, Task, TaskInput } from "./types";
 
 export const LS_KEY = "kata-navi-appA";
 
@@ -31,6 +31,14 @@ export interface StoreContextValue {
   updateTask: (id: string, input: TaskInput) => void;
   /** 業務（作業）を削除（関連する改善計画も併せて削除） */
   deleteTask: (id: string) => void;
+  /** スコア（影響度／頻度）を更新（A-2 スライダー） */
+  setScore: (id: string, key: "impact" | "freq", value: number) => void;
+  /** 問題カテゴリのトグル（A-2） */
+  toggleProblem: (id: string, problem: string) => void;
+  /** ECRS区分の選択／解除（A-3。同じ値の再選択で解除） */
+  setEcrs: (id: string, key: Ecrs) => void;
+  /** 改善計画を追加（A-3「計画に追加」） */
+  addPlan: (input: PlanInput) => void;
   /** 業務名の名称変更（その業務名の全作業を付け替え） */
   renameGroup: (oldName: string, newName: string) => void;
   /** 業務名の削除（その業務名の作業＋関連plansを削除） */
