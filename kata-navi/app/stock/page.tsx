@@ -295,7 +295,8 @@ function TaskTable({
   onDelete: (id: string) => void;
 }) {
   return (
-    <table className="w-full border-collapse text-[13px]">
+    <div className="overflow-x-auto">
+    <table className="w-full min-w-[480px] border-collapse text-[13px]">
       <thead>
         <tr>
           <th className={th}>作業</th>
@@ -341,6 +342,7 @@ function TaskTable({
         ))}
       </tbody>
     </table>
+    </div>
   );
 }
 

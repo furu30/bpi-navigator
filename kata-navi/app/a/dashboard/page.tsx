@@ -36,7 +36,8 @@ export default function DashboardPage() {
 
       <h2 className="mb-3 text-[20px] font-extrabold">時間の大きい業務 TOP</h2>
       {sorted.length ? (
-        <table className="w-full border-collapse overflow-hidden rounded-xl text-[13px] shadow-[0_1px_3px_rgba(0,0,0,.05)]">
+        <div className="overflow-x-auto rounded-xl shadow-[0_1px_3px_rgba(0,0,0,.05)]">
+        <table className="w-full min-w-[560px] border-collapse text-[13px]">
           <thead>
             <tr>
               <th className={th}>業務</th>
@@ -73,6 +74,7 @@ export default function DashboardPage() {
             ))}
           </tbody>
         </table>
+        </div>
       ) : (
         <div className="rounded-xl border border-dashed border-[var(--line)] bg-white p-[34px] text-center text-[var(--muted)]">
           業務がありません。棚卸しで登録してください。

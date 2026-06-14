@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { exportAll, parseImport } from "@/lib/io";
 import { useStore } from "@/lib/store";
 import { GroupSwitcher } from "./GroupSwitcher";
@@ -57,6 +57,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const { state, resetDemo, replaceState, mergeGroupFile } = useStore();
   const isHome = pathname === "/";
   const fileInputRef = useRef<HTMLInputElement>(null);
+  // モバイル用サイドバー（ドロワー）の開閉
+  const [navOpen, setNavOpen] = useState(false);
+  const closeNav = () => setNavOpen(false);
 
   function handleImport(file: File | undefined) {
     if (!file) return;
@@ -76,23 +79,48 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex min-h-screen">
-      {/* ===== サイドバー ===== */}
-      <nav className="sticky top-0 flex h-screen w-[230px] flex-shrink-0 flex-col bg-[var(--navy)] text-[#cbd5e1]">
-        <div className="border-b border-[#334155] px-[18px] pb-[14px] pt-[18px]">
-          <div className="text-[18px] font-extrabold text-white">
-            <span className="mr-1 inline-block rounded-md bg-[#2563eb] px-[7px] py-px">
-              型
-            </span>
-            KATA Navi
+      {/* モバイル時のオーバーレイ（ドロワー背面） */}
+      {navOpen && (
+        <button
+          type="button"
+          aria-label="メニューを閉じる"
+          onClick={closeNav}
+          className="fixed inset-0 z-30 bg-black/40 md:hidden"
+        />
+      )}
+
+      {/* ===== サイドバー（md未満はドロワー、md以上は常設） ===== */}
+      <nav
+        className={`fixed inset-y-0 left-0 z-40 flex h-screen w-[230px] flex-shrink-0 flex-col bg-[var(--navy)] text-[#cbd5e1] transition-transform duration-200 md:sticky md:top-0 md:z-auto md:translate-x-0 ${
+          navOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        <div className="flex items-start justify-between border-b border-[#334155] px-[18px] pb-[14px] pt-[18px]">
+          <div>
+            <div className="text-[18px] font-extrabold text-white">
+              <span className="mr-1 inline-block rounded-md bg-[#2563eb] px-[7px] py-px">
+                型
+              </span>
+              KATA Navi
+            </div>
+            <div className="mt-1 text-[11.5px] font-bold text-[#7dd3fc]">
+              アプリA：業務改善ナビ
+            </div>
           </div>
-          <div className="mt-1 text-[11.5px] font-bold text-[#7dd3fc]">
-            アプリA：業務改善ナビ
-          </div>
+          {/* モバイルの閉じるボタン */}
+          <button
+            type="button"
+            aria-label="メニューを閉じる"
+            onClick={closeNav}
+            className="-mr-1 text-[22px] leading-none text-[#cbd5e1] hover:text-white md:hidden"
+          >
+            ×
+          </button>
         </div>
 
-        <NavSection label="スタート" items={START_NAV} pathname={pathname} />
-        <NavSection label="改善の流れ" items={FLOW_NAV} pathname={pathname} />
-        <NavSection label="管理" items={MANAGE_NAV} pathname={pathname} />
+        <NavSection label="スタート" items={START_NAV} pathname={pathname} onNavigate={closeNav} />
+        <NavSection label="改善の流れ" items={FLOW_NAV} pathname={pathname} onNavigate={closeNav} />
+        <NavSection label="管理" items={MANAGE_NAV} pathname={pathname} onNavigate={closeNav} />
 
         <div className="mt-auto flex flex-wrap gap-2 border-t border-[#334155] px-4 py-[14px]">
           <FootButton
@@ -128,20 +156,32 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       {/* ===== メイン ===== */}
       <div className="flex min-w-0 flex-1 flex-col">
-        <div className="sticky top-0 z-[5] flex items-center justify-between border-b border-[var(--line)] bg-white px-[30px] py-[14px]">
-          <h1 className="text-[17px] font-extrabold">{titleFor(pathname)}</h1>
-          <div className="flex items-center gap-3.5">
+        <div className="sticky top-0 z-[5] flex flex-wrap items-center justify-between gap-2 border-b border-[var(--line)] bg-white px-4 py-3 md:px-[30px] md:py-[14px]">
+          <div className="flex min-w-0 items-center gap-2">
+            <button
+              type="button"
+              aria-label="メニューを開く"
+              onClick={() => setNavOpen(true)}
+              className="-ml-1 rounded-md px-2 py-1 text-[20px] leading-none text-[var(--navy)] hover:bg-[var(--bg)] md:hidden"
+            >
+              ☰
+            </button>
+            <h1 className="truncate text-[16px] font-extrabold md:text-[17px]">
+              {titleFor(pathname)}
+            </h1>
+          </div>
+          <div className="flex min-w-0 items-center gap-2 md:gap-3.5">
             {!isHome && <GroupSwitcher />}
             <Link
               href="/settings"
               title="設定・マスタで会社名を変更"
-              className="rounded-full bg-[var(--blue-soft)] px-[11px] py-1 text-[11.5px] text-[var(--muted)] hover:bg-[var(--blue-line)]"
+              className="max-w-[160px] truncate whitespace-nowrap rounded-full bg-[var(--blue-soft)] px-[11px] py-1 text-[11.5px] text-[var(--muted)] hover:bg-[var(--blue-line)]"
             >
               🏢 {state.company?.trim() ? state.company : "会社名 未設定"}
             </Link>
           </div>
         </div>
-        <div className="mx-auto w-full max-w-[980px] px-[30px] py-[26px]">
+        <div className="mx-auto w-full max-w-[980px] px-4 py-5 md:px-[30px] md:py-[26px]">
           {children}
         </div>
       </div>
@@ -153,10 +193,12 @@ function NavSection({
   label,
   items,
   pathname,
+  onNavigate,
 }: {
   label: string;
   items: NavItem[];
   pathname: string;
+  onNavigate?: () => void;
 }) {
   return (
     <>
@@ -170,6 +212,7 @@ function NavSection({
             <Link
               key={item.href}
               href={item.href}
+              onClick={onNavigate}
               className={`flex w-full items-center gap-[9px] rounded-lg px-3 py-2.5 text-[13.5px] ${
                 active
                   ? "bg-[#2563eb] font-bold text-white"

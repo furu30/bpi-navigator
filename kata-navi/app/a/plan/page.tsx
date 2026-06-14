@@ -71,7 +71,8 @@ export default function PlanPage() {
       </div>
 
       {ps.length ? (
-        <table className="w-full border-collapse overflow-hidden rounded-xl text-[13px] shadow-[0_1px_3px_rgba(0,0,0,.05)]">
+        <div className="overflow-x-auto rounded-xl shadow-[0_1px_3px_rgba(0,0,0,.05)]">
+        <table className="w-full min-w-[620px] border-collapse text-[13px]">
           <thead>
             <tr>
               <th className={th}>改善内容</th>
@@ -133,6 +134,7 @@ export default function PlanPage() {
             ))}
           </tbody>
         </table>
+        </div>
       ) : (
         <div className="rounded-xl border border-dashed border-[var(--line)] bg-white p-[34px] text-center text-[var(--muted)]">
           A-3「ECRSで改善案」から計画を追加してください。
