@@ -33,7 +33,11 @@ const FLOW_NAV: NavItem[] = [
   { href: "/a/result", label: "効果検証・レポート", title: "A-5 効果検証・レポート", num: 5 },
 ];
 
-const ALL_NAV = [...START_NAV, ...FLOW_NAV];
+const MANAGE_NAV: NavItem[] = [
+  { href: "/settings", label: "設定・マスタ", title: "設定・マスタ", icon: "⚙" },
+];
+
+const ALL_NAV = [...START_NAV, ...FLOW_NAV, ...MANAGE_NAV];
 
 function titleFor(pathname: string): string {
   const hit = ALL_NAV.find((n) =>
@@ -88,6 +92,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
         <NavSection label="スタート" items={START_NAV} pathname={pathname} />
         <NavSection label="改善の流れ" items={FLOW_NAV} pathname={pathname} />
+        <NavSection label="管理" items={MANAGE_NAV} pathname={pathname} />
 
         <div className="mt-auto flex flex-wrap gap-2 border-t border-[#334155] px-4 py-[14px]">
           <FootButton

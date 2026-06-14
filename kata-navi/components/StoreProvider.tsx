@@ -187,6 +187,128 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     [],
   );
 
+  // ===== プロセス区分マスタ =====
+  const addProcessCategory = useCallback((name: string) => {
+    const n = name.trim();
+    if (!n) return;
+    setState((prev) =>
+      prev.masters.processCategories.includes(n)
+        ? prev
+        : {
+            ...prev,
+            masters: {
+              ...prev.masters,
+              processCategories: [...prev.masters.processCategories, n],
+            },
+          },
+    );
+  }, []);
+
+  const renameProcessCategory = useCallback(
+    (oldName: string, newName: string) => {
+      const n = newName.trim();
+      if (!n || n === oldName) return;
+      setState((prev) => ({
+        ...prev,
+        masters: {
+          ...prev.masters,
+          processCategories: prev.masters.processCategories.map((c) =>
+            c === oldName ? n : c,
+          ),
+        },
+        // 既存作業のプロセス区分にも反映する
+        tasks: prev.tasks.map((t) =>
+          t.category === oldName ? { ...t, category: n } : t,
+        ),
+      }));
+    },
+    [],
+  );
+
+  const deleteProcessCategory = useCallback((name: string) => {
+    setState((prev) => ({
+      ...prev,
+      masters: {
+        ...prev.masters,
+        processCategories: prev.masters.processCategories.filter(
+          (c) => c !== name,
+        ),
+      },
+    }));
+  }, []);
+
+  // ===== 問題カテゴリマスタ =====
+  const addProblemCategory = useCallback((name: string, desc?: string) => {
+    const n = name.trim();
+    if (!n) return;
+    setState((prev) =>
+      prev.masters.problemCategories.some((p) => p.name === n)
+        ? prev
+        : {
+            ...prev,
+            masters: {
+              ...prev.masters,
+              problemCategories: [
+                ...prev.masters.problemCategories,
+                { id: uid(), name: n, desc: desc?.trim() || undefined },
+              ],
+            },
+          },
+    );
+  }, []);
+
+  const updateProblemCategory = useCallback(
+    (id: string, name: string, desc?: string) => {
+      const n = name.trim();
+      if (!n) return;
+      setState((prev) => {
+        const target = prev.masters.problemCategories.find((p) => p.id === id);
+        const oldName = target?.name;
+        return {
+          ...prev,
+          masters: {
+            ...prev.masters,
+            problemCategories: prev.masters.problemCategories.map((p) =>
+              p.id === id ? { ...p, name: n, desc: desc?.trim() || undefined } : p,
+            ),
+          },
+          // 名称変更を既存作業のproblemsにも反映する
+          tasks:
+            oldName && oldName !== n
+              ? prev.tasks.map((t) => ({
+                  ...t,
+                  problems: t.problems.map((pr) => (pr === oldName ? n : pr)),
+                }))
+              : prev.tasks,
+        };
+      });
+    },
+    [],
+  );
+
+  const deleteProblemCategory = useCallback((id: string) => {
+    setState((prev) => {
+      const target = prev.masters.problemCategories.find((p) => p.id === id);
+      const name = target?.name;
+      return {
+        ...prev,
+        masters: {
+          ...prev.masters,
+          problemCategories: prev.masters.problemCategories.filter(
+            (p) => p.id !== id,
+          ),
+        },
+        // 既存作業のproblemsからも除去する
+        tasks: name
+          ? prev.tasks.map((t) => ({
+              ...t,
+              problems: t.problems.filter((pr) => pr !== name),
+            }))
+          : prev.tasks,
+      };
+    });
+  }, []);
+
   const renameGroup = useCallback((oldName: string, newName: string) => {
     const next = newName.trim();
     if (!next || next === oldName) return;
@@ -255,6 +377,12 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     deletePlan,
     setPlanStatus,
     setPlanAfter,
+    addProcessCategory,
+    renameProcessCategory,
+    deleteProcessCategory,
+    addProblemCategory,
+    updateProblemCategory,
+    deleteProblemCategory,
     renameGroup,
     deleteGroup,
     mergeGroupFile,

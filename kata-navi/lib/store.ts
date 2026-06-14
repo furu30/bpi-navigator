@@ -55,6 +55,18 @@ export interface StoreContextValue {
   setPlanStatus: (id: string, status: PlanStatus) => void;
   /** 改善後の月間時間を設定（A-5。null=未入力） */
   setPlanAfter: (id: string, afterMonthly: number | null) => void;
+  /** プロセス区分マスタ：追加（重複・空は無視） */
+  addProcessCategory: (name: string) => void;
+  /** プロセス区分マスタ：名称変更（既存作業のcategoryにも反映） */
+  renameProcessCategory: (oldName: string, newName: string) => void;
+  /** プロセス区分マスタ：削除（マスタからのみ削除） */
+  deleteProcessCategory: (name: string) => void;
+  /** 問題カテゴリマスタ：追加（重複・空は無視） */
+  addProblemCategory: (name: string, desc?: string) => void;
+  /** 問題カテゴリマスタ：編集（名称変更は既存作業のproblemsにも反映） */
+  updateProblemCategory: (id: string, name: string, desc?: string) => void;
+  /** 問題カテゴリマスタ：削除（既存作業のproblemsからも除去） */
+  deleteProblemCategory: (id: string) => void;
   /** 業務名の名称変更（その業務名の全作業を付け替え） */
   renameGroup: (oldName: string, newName: string) => void;
   /** 業務名の削除（その業務名の作業＋関連plansを削除） */
