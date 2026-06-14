@@ -216,6 +216,32 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     }));
   }, []);
 
+  const updateReproPlan = useCallback((id: string, input: ReproPlanInput) => {
+    setState((prev) => ({
+      ...prev,
+      // status / able / targetCount は編集対象外なので保持する
+      reproPlans: prev.reproPlans.map((p) =>
+        p.id === id ? { ...p, ...input } : p,
+      ),
+    }));
+  }, []);
+
+  const deleteReproPlan = useCallback((id: string) => {
+    setState((prev) => ({
+      ...prev,
+      reproPlans: prev.reproPlans.filter((p) => p.id !== id),
+    }));
+  }, []);
+
+  const setReproPlanStatus = useCallback((id: string, status: PlanStatus) => {
+    setState((prev) => ({
+      ...prev,
+      reproPlans: prev.reproPlans.map((p) =>
+        p.id === id ? { ...p, status } : p,
+      ),
+    }));
+  }, []);
+
   // ===== プロセス区分マスタ =====
   const addProcessCategory = useCallback((name: string) => {
     const n = name.trim();
@@ -414,6 +440,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setPlanStatus,
     setPlanAfter,
     addReproPlan,
+    updateReproPlan,
+    deleteReproPlan,
+    setReproPlanStatus,
     addProcessCategory,
     renameProcessCategory,
     deleteProcessCategory,

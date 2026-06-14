@@ -66,6 +66,12 @@ export interface StoreContextValue {
   setPlanAfter: (id: string, afterMonthly: number | null) => void;
   /** 育成・定着計画を追加（B-3「受け継ぎ方ボタン」） */
   addReproPlan: (input: ReproPlanInput) => void;
+  /** 育成・定着計画を編集（status/able/targetCountは保持） */
+  updateReproPlan: (id: string, input: ReproPlanInput) => void;
+  /** 育成・定着計画を削除 */
+  deleteReproPlan: (id: string) => void;
+  /** 育成・定着計画のステータス変更（B-4） */
+  setReproPlanStatus: (id: string, status: PlanStatus) => void;
   /** プロセス区分マスタ：追加（重複・空は無視） */
   addProcessCategory: (name: string) => void;
   /** プロセス区分マスタ：名称変更（既存作業のcategoryにも反映） */
