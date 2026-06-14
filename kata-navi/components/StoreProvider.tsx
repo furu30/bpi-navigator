@@ -13,7 +13,9 @@ import type {
   Ecrs,
   PlanInput,
   PlanStatus,
+  Tacit,
   TaskInput,
+  WorkType,
 } from "@/lib/types";
 
 /** localStorageから状態を復元。壊れている／無いときはデモデータ。 */
@@ -142,6 +144,20 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       tasks: prev.tasks.map((t) =>
         t.id === id ? { ...t, ecrs: t.ecrs === key ? undefined : key } : t,
       ),
+    }));
+  }, []);
+
+  const setWorkType = useCallback((id: string, workType: WorkType) => {
+    setState((prev) => ({
+      ...prev,
+      tasks: prev.tasks.map((t) => (t.id === id ? { ...t, workType } : t)),
+    }));
+  }, []);
+
+  const setTacit = useCallback((id: string, tacit: Tacit) => {
+    setState((prev) => ({
+      ...prev,
+      tasks: prev.tasks.map((t) => (t.id === id ? { ...t, tacit } : t)),
     }));
   }, []);
 
@@ -379,6 +395,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setScore,
     toggleProblem,
     setEcrs,
+    setWorkType,
+    setTacit,
     addPlan,
     updatePlan,
     deletePlan,

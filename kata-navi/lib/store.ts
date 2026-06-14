@@ -11,8 +11,10 @@ import type {
   PlanInput,
   PlanStatus,
   ReproPlan,
+  Tacit,
   Task,
   TaskInput,
+  WorkType,
 } from "./types";
 
 export const LS_KEY = "kata-navi-appA";
@@ -47,6 +49,10 @@ export interface StoreContextValue {
   toggleProblem: (id: string, problem: string) => void;
   /** ECRS区分の選択／解除（A-3。同じ値の再選択で解除） */
   setEcrs: (id: string, key: Ecrs) => void;
+  /** 業務種別を変更（B-2） */
+  setWorkType: (id: string, workType: WorkType) => void;
+  /** 暗黙知（5つの問い）を保存（B-2） */
+  setTacit: (id: string, tacit: Tacit) => void;
   /** 改善計画を追加（A-3「計画に追加」） */
   addPlan: (input: PlanInput) => void;
   /** 改善計画を編集（status/afterMonthlyは保持） */
