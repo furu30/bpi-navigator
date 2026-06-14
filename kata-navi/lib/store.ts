@@ -11,6 +11,7 @@ import type {
   PlanInput,
   PlanStatus,
   ReproPlan,
+  ReproPlanInput,
   Tacit,
   Task,
   TaskInput,
@@ -63,6 +64,8 @@ export interface StoreContextValue {
   setPlanStatus: (id: string, status: PlanStatus) => void;
   /** 改善後の月間時間を設定（A-5。null=未入力） */
   setPlanAfter: (id: string, afterMonthly: number | null) => void;
+  /** 育成・定着計画を追加（B-3「受け継ぎ方ボタン」） */
+  addReproPlan: (input: ReproPlanInput) => void;
   /** プロセス区分マスタ：追加（重複・空は無視） */
   addProcessCategory: (name: string) => void;
   /** プロセス区分マスタ：名称変更（既存作業のcategoryにも反映） */

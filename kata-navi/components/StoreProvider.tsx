@@ -13,6 +13,7 @@ import type {
   Ecrs,
   PlanInput,
   PlanStatus,
+  ReproPlanInput,
   Tacit,
   TaskInput,
   WorkType,
@@ -204,6 +205,16 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     },
     [],
   );
+
+  const addReproPlan = useCallback((input: ReproPlanInput) => {
+    setState((prev) => ({
+      ...prev,
+      reproPlans: [
+        ...prev.reproPlans,
+        { id: uid(), ...input, status: "未着手", able: null, targetCount: null },
+      ],
+    }));
+  }, []);
 
   // ===== プロセス区分マスタ =====
   const addProcessCategory = useCallback((name: string) => {
@@ -402,6 +413,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     deletePlan,
     setPlanStatus,
     setPlanAfter,
+    addReproPlan,
     addProcessCategory,
     renameProcessCategory,
     deleteProcessCategory,
