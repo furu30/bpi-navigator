@@ -123,7 +123,8 @@ export default function EcrsPage() {
 
       {planTask && (
         <PlanModal
-          task={planTask}
+          taskId={planTask.id}
+          taskName={planTask.content}
           onClose={() => setPlanTask(null)}
           onSubmit={handleSubmitPlan}
         />

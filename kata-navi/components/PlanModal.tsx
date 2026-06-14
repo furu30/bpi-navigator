@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { PlanInput, Task } from "@/lib/types";
+import type { Plan, PlanInput } from "@/lib/types";
 
 const METHODS = [
   "手順変更",
@@ -13,21 +13,30 @@ const METHODS = [
 ];
 
 interface Props {
-  /** 計画の対象業務 */
-  task: Task;
+  /** 対象業務のID（A-3：対象タスク／A-4：既存planのtaskId） */
+  taskId: string;
+  /** 対象業務の表示名 */
+  taskName: string;
+  /** 編集時の既存値（null＝新規追加） */
+  initial?: Plan | null;
   onClose: () => void;
   onSubmit: (input: PlanInput) => void;
 }
 
 // 開いているときだけマウントして使う（マウント時の初期値でリセット）。
-// 編集対応（既存planの読み込み）はステップ5後半のA-4で拡張する。
-export function PlanModal({ task, onClose, onSubmit }: Props) {
-  const [content, setContent] = useState("");
-  const [person, setPerson] = useState("");
-  const [date, setDate] = useState("");
-  const [method, setMethod] = useState(METHODS[0]);
-  const [effect, setEffect] = useState("");
-  const [showDetail, setShowDetail] = useState(false);
+export function PlanModal({
+  taskId,
+  taskName,
+  initial,
+  onClose,
+  onSubmit,
+}: Props) {
+  const [content, setContent] = useState(initial?.content ?? "");
+  const [person, setPerson] = useState(initial?.person ?? "");
+  const [date, setDate] = useState(initial?.date ?? "");
+  const [method, setMethod] = useState(initial?.method ?? METHODS[0]);
+  const [effect, setEffect] = useState(initial?.effect ?? "");
+  const [showDetail, setShowDetail] = useState(!!initial);
   const [error, setError] = useState("");
 
   function handleSubmit() {
@@ -38,8 +47,8 @@ export function PlanModal({ task, onClose, onSubmit }: Props) {
       return;
     }
     onSubmit({
-      taskId: task.id,
-      taskName: task.content,
+      taskId,
+      taskName,
       content: c,
       person: p,
       date,
@@ -57,7 +66,7 @@ export function PlanModal({ task, onClose, onSubmit }: Props) {
     >
       <div className="w-full max-w-[560px] rounded-2xl bg-white shadow-[0_20px_50px_rgba(0,0,0,.3)]">
         <h3 className="flex items-center justify-between border-b border-[var(--line)] px-5 py-4 text-[16px] font-extrabold">
-          改善計画
+          {initial ? "改善計画を編集" : "改善計画"}
           <button
             type="button"
             onClick={onClose}
@@ -70,7 +79,7 @@ export function PlanModal({ task, onClose, onSubmit }: Props) {
 
         <div className="px-5 py-[18px]">
           <Field label="対象業務">
-            <input value={task.content} readOnly className={`${inputCls} bg-[#f8fafc]`} />
+            <input value={taskName} readOnly className={`${inputCls} bg-[#f8fafc]`} />
           </Field>
           <Field label="改善内容" required>
             <textarea

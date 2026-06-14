@@ -8,7 +8,13 @@ import {
   StoreContext,
   type StoreContextValue,
 } from "@/lib/store";
-import type { AppState, Ecrs, PlanInput, TaskInput } from "@/lib/types";
+import type {
+  AppState,
+  Ecrs,
+  PlanInput,
+  PlanStatus,
+  TaskInput,
+} from "@/lib/types";
 
 /** localStorageから状態を復元。壊れている／無いときはデモデータ。 */
 function loadState(): AppState {
@@ -147,6 +153,40 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     }));
   }, []);
 
+  const updatePlan = useCallback((id: string, input: PlanInput) => {
+    setState((prev) => ({
+      ...prev,
+      // status / afterMonthly は編集対象外なので保持する
+      plans: prev.plans.map((p) => (p.id === id ? { ...p, ...input } : p)),
+    }));
+  }, []);
+
+  const deletePlan = useCallback((id: string) => {
+    setState((prev) => ({
+      ...prev,
+      plans: prev.plans.filter((p) => p.id !== id),
+    }));
+  }, []);
+
+  const setPlanStatus = useCallback((id: string, status: PlanStatus) => {
+    setState((prev) => ({
+      ...prev,
+      plans: prev.plans.map((p) => (p.id === id ? { ...p, status } : p)),
+    }));
+  }, []);
+
+  const setPlanAfter = useCallback(
+    (id: string, afterMonthly: number | null) => {
+      setState((prev) => ({
+        ...prev,
+        plans: prev.plans.map((p) =>
+          p.id === id ? { ...p, afterMonthly } : p,
+        ),
+      }));
+    },
+    [],
+  );
+
   const renameGroup = useCallback((oldName: string, newName: string) => {
     const next = newName.trim();
     if (!next || next === oldName) return;
@@ -211,6 +251,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     toggleProblem,
     setEcrs,
     addPlan,
+    updatePlan,
+    deletePlan,
+    setPlanStatus,
+    setPlanAfter,
     renameGroup,
     deleteGroup,
     mergeGroupFile,
