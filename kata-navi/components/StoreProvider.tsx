@@ -242,6 +242,25 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     }));
   }, []);
 
+  const setReproAble = useCallback((id: string, able: number | null) => {
+    setState((prev) => ({
+      ...prev,
+      reproPlans: prev.reproPlans.map((p) => (p.id === id ? { ...p, able } : p)),
+    }));
+  }, []);
+
+  const setReproTargetCount = useCallback(
+    (id: string, targetCount: number | null) => {
+      setState((prev) => ({
+        ...prev,
+        reproPlans: prev.reproPlans.map((p) =>
+          p.id === id ? { ...p, targetCount } : p,
+        ),
+      }));
+    },
+    [],
+  );
+
   // ===== プロセス区分マスタ =====
   const addProcessCategory = useCallback((name: string) => {
     const n = name.trim();
@@ -443,6 +462,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     updateReproPlan,
     deleteReproPlan,
     setReproPlanStatus,
+    setReproAble,
+    setReproTargetCount,
     addProcessCategory,
     renameProcessCategory,
     deleteProcessCategory,

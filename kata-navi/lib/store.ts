@@ -72,6 +72,10 @@ export interface StoreContextValue {
   deleteReproPlan: (id: string) => void;
   /** 育成・定着計画のステータス変更（B-4） */
   setReproPlanStatus: (id: string, status: PlanStatus) => void;
+  /** できる人：現在の人数を設定（B-5。null=未入力） */
+  setReproAble: (id: string, able: number | null) => void;
+  /** できる人：目標の人数を設定（B-5。null=未入力） */
+  setReproTargetCount: (id: string, targetCount: number | null) => void;
   /** プロセス区分マスタ：追加（重複・空は無視） */
   addProcessCategory: (name: string) => void;
   /** プロセス区分マスタ：名称変更（既存作業のcategoryにも反映） */
