@@ -10,6 +10,7 @@ import type {
   Plan,
   PlanInput,
   PlanStatus,
+  ReproPlan,
   Task,
   TaskInput,
 } from "./types";
@@ -20,7 +21,8 @@ export const LS_KEY = "kata-navi-appA";
 export interface GroupFile {
   group: string;
   tasks: Task[];
-  plans: Plan[];
+  plans: Plan[]; // アプリA：改善計画
+  reproPlans: ReproPlan[]; // アプリB：育成・定着計画
 }
 
 export interface StoreContextValue {
@@ -107,10 +109,16 @@ export function curTasks(state: AppState): Task[] {
     : state.tasks;
 }
 
-/** 現在の業務名に紐づく改善計画。 */
+/** 現在の業務名に紐づく改善計画（アプリA）。 */
 export function curPlans(state: AppState): Plan[] {
   const ids = new Set(curTasks(state).map((t) => t.id));
   return state.plans.filter((p) => ids.has(p.taskId));
+}
+
+/** 現在の業務名に紐づく育成・定着計画（アプリB）。 */
+export function curReproPlans(state: AppState): ReproPlan[] {
+  const ids = new Set(curTasks(state).map((t) => t.id));
+  return state.reproPlans.filter((p) => ids.has(p.taskId));
 }
 
 /** 指定した業務名に紐づく改善計画。 */

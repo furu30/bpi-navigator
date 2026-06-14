@@ -25,6 +25,7 @@ const START_NAV: NavItem[] = [
   },
 ];
 
+// アプリA：改善の流れ（ブルー）
 const FLOW_NAV: NavItem[] = [
   { href: "/a/dashboard", label: "改善ダッシュボード", title: "A-1 改善ダッシュボード", num: 1 },
   { href: "/a/analyze", label: "問題の見える化", title: "A-2 問題の見える化", num: 2 },
@@ -33,11 +34,20 @@ const FLOW_NAV: NavItem[] = [
   { href: "/a/result", label: "効果検証・レポート", title: "A-5 効果検証・レポート", num: 5 },
 ];
 
+// アプリB：再現性を高める（ティール）
+const REPRO_NAV: NavItem[] = [
+  { href: "/b/dashboard", label: "再現性ダッシュボード", title: "B-1 再現性ダッシュボード", num: 1 },
+  { href: "/b/identify", label: "切り分け・暗黙知", title: "B-2 切り分け・暗黙知", num: 2 },
+  { href: "/b/route", label: "標準化／形式知化・教育", title: "B-3 標準化／形式知化・教育", num: 3 },
+  { href: "/b/plan", label: "育成・定着計画", title: "B-4 育成・定着計画", num: 4 },
+  { href: "/b/result", label: "定着の確認・レポート", title: "B-5 定着の確認・レポート", num: 5 },
+];
+
 const MANAGE_NAV: NavItem[] = [
   { href: "/settings", label: "設定・マスタ", title: "設定・マスタ", icon: "⚙" },
 ];
 
-const ALL_NAV = [...START_NAV, ...FLOW_NAV, ...MANAGE_NAV];
+const ALL_NAV = [...START_NAV, ...FLOW_NAV, ...REPRO_NAV, ...MANAGE_NAV];
 
 function titleFor(pathname: string): string {
   const hit = ALL_NAV.find((n) =>
@@ -104,7 +114,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               KATA Navi
             </div>
             <div className="mt-1 text-[11.5px] font-bold text-[#7dd3fc]">
-              アプリA：業務改善ナビ
+              業務改善 × 再現性ナビ
             </div>
           </div>
           {/* モバイルの閉じるボタン */}
@@ -119,7 +129,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
 
         <NavSection label="スタート" items={START_NAV} pathname={pathname} onNavigate={closeNav} />
-        <NavSection label="改善の流れ" items={FLOW_NAV} pathname={pathname} onNavigate={closeNav} />
+        <NavSection label="改善の流れ（アプリA）" items={FLOW_NAV} pathname={pathname} onNavigate={closeNav} accent="blue" />
+        <NavSection label="再現性を高める（アプリB）" items={REPRO_NAV} pathname={pathname} onNavigate={closeNav} accent="teal" />
         <NavSection label="管理" items={MANAGE_NAV} pathname={pathname} onNavigate={closeNav} />
 
         <div className="mt-auto flex flex-wrap gap-2 border-t border-[#334155] px-4 py-[14px]">
@@ -194,12 +205,17 @@ function NavSection({
   items,
   pathname,
   onNavigate,
+  accent = "blue",
 }: {
   label: string;
   items: NavItem[];
   pathname: string;
   onNavigate?: () => void;
+  accent?: "blue" | "teal";
 }) {
+  // アプリAはブルー、アプリBはティールでアクティブ表示を色分け
+  const activeBg = accent === "teal" ? "bg-[var(--teal)]" : "bg-[#2563eb]";
+  const numText = accent === "teal" ? "text-[var(--teal-d)]" : "text-[#2563eb]";
   return (
     <>
       <div className="px-[18px] pb-[5px] pt-[14px] text-[10.5px] tracking-[0.1em] text-[#64748b]">
@@ -215,14 +231,14 @@ function NavSection({
               onClick={onNavigate}
               className={`flex w-full items-center gap-[9px] rounded-lg px-3 py-2.5 text-[13.5px] ${
                 active
-                  ? "bg-[#2563eb] font-bold text-white"
+                  ? `${activeBg} font-bold text-white`
                   : "text-[#cbd5e1] hover:bg-[#334155] hover:text-white"
               }`}
             >
               {item.num != null ? (
                 <span
                   className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md text-[11px] ${
-                    active ? "bg-white text-[#2563eb]" : "bg-[#475569] text-white"
+                    active ? `bg-white ${numText}` : "bg-[#475569] text-white"
                   }`}
                 >
                   {item.num}

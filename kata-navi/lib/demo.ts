@@ -118,6 +118,7 @@ export function demoState(): AppState {
     company: "(株)KK精工",
     tasks: SEED.map((s) => ({ id: uid(), ...s })),
     plans: [],
+    reproPlans: [],
     masters: defaultMasters(),
     currentGroup: null,
   };

@@ -27,6 +27,7 @@ function loadState(): AppState {
         if (!data.masters) data.masters = demoState().masters;
         if (data.currentGroup === undefined) data.currentGroup = null;
         if (typeof data.company !== "string") data.company = "";
+        if (!Array.isArray(data.reproPlans)) data.reproPlans = [];
         return data as AppState;
       }
     }
@@ -103,6 +104,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       ...prev,
       tasks: prev.tasks.filter((t) => t.id !== id),
       plans: prev.plans.filter((p) => p.taskId !== id),
+      reproPlans: prev.reproPlans.filter((p) => p.taskId !== id),
     }));
   }, []);
 
@@ -330,6 +332,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         ...prev,
         tasks: prev.tasks.filter((t) => t.group !== name),
         plans: prev.plans.filter((p) => !removedIds.has(p.taskId)),
+        reproPlans: prev.reproPlans.filter((p) => !removedIds.has(p.taskId)),
         currentGroup: prev.currentGroup === name ? null : prev.currentGroup,
       };
     });
@@ -337,16 +340,20 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   const mergeGroupFile = useCallback((file: GroupFile) => {
     setState((prev) => {
-      // 同名業務名の作業・関連plansを除去し、ファイル側で置換する
+      // 同名業務名の作業・関連plans/reproPlansを除去し、ファイル側で置換する
       const incomingTaskIds = new Set(file.tasks.map((t) => t.id));
       const keptTasks = prev.tasks.filter((t) => t.group !== file.group);
       const keptPlans = prev.plans.filter(
+        (p) => !incomingTaskIds.has(p.taskId),
+      );
+      const keptRepro = prev.reproPlans.filter(
         (p) => !incomingTaskIds.has(p.taskId),
       );
       return {
         ...prev,
         tasks: [...keptTasks, ...file.tasks],
         plans: [...keptPlans, ...(file.plans ?? [])],
+        reproPlans: [...keptRepro, ...(file.reproPlans ?? [])],
         currentGroup: file.group,
       };
     });

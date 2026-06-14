@@ -18,10 +18,11 @@ function downloadJSON(filename: string, data: unknown) {
 
 /** 全体（全業務名）をエクスポート */
 export function exportAll(state: AppState) {
-  downloadJSON("kata-navi-appA-all.json", {
+  downloadJSON("kata-navi-all.json", {
     company: state.company,
     tasks: state.tasks,
     plans: state.plans,
+    reproPlans: state.reproPlans,
     masters: state.masters,
     currentGroup: state.currentGroup,
   } satisfies AppState);
@@ -32,7 +33,8 @@ export function exportGroup(state: AppState, group: string) {
   const tasks = state.tasks.filter((t) => t.group === group);
   const ids = new Set(tasks.map((t) => t.id));
   const plans = state.plans.filter((p) => ids.has(p.taskId));
-  const file: GroupFile = { group, tasks, plans };
+  const reproPlans = state.reproPlans.filter((p) => ids.has(p.taskId));
+  const file: GroupFile = { group, tasks, plans, reproPlans };
   downloadJSON(`kata-navi_${group}.json`, file);
 }
 
@@ -61,6 +63,9 @@ export function parseImport(text: string): ParseResult {
         group: obj.group,
         tasks: obj.tasks as GroupFile["tasks"],
         plans: Array.isArray(obj.plans) ? (obj.plans as GroupFile["plans"]) : [],
+        reproPlans: Array.isArray(obj.reproPlans)
+          ? (obj.reproPlans as GroupFile["reproPlans"])
+          : [],
       },
     };
   }
@@ -68,6 +73,7 @@ export function parseImport(text: string): ParseResult {
   if (Array.isArray(obj.tasks) && Array.isArray(obj.plans)) {
     const data = obj as unknown as AppState;
     if (typeof data.company !== "string") data.company = "";
+    if (!Array.isArray(data.reproPlans)) data.reproPlans = [];
     return { kind: "full", data };
   }
   return { kind: "error", message: "読み込めない形式です。" };

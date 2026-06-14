@@ -25,14 +25,17 @@ export default function HomePage() {
           </div>
         </Link>
 
-        <div className="block cursor-not-allowed rounded-[14px] border-2 border-[var(--line)] bg-white p-[22px] opacity-50">
-          <h4 className="mb-1.5 text-[16px] font-extrabold text-[#0f766e]">
-            再現性ナビ（アプリB）
+        <Link
+          href="/b/dashboard"
+          className="block rounded-[14px] border-2 border-[var(--line)] bg-white p-[22px] hover:border-[var(--teal)] hover:shadow-[0_6px_18px_rgba(13,148,136,.12)]"
+        >
+          <h4 className="mb-1.5 text-[16px] font-extrabold text-[var(--teal-d)]">
+            ② 再現性ナビ（アプリB）
           </h4>
           <div className="text-[12.5px] text-[var(--muted)]">
-            属人性の再現は別アプリ。※今回のスコープ外（将来）。
+            「あの人にしかできない」を無くす。作業は標準化、感覚は形式知化・教育で受け継ぎます。
           </div>
-        </div>
+        </Link>
       </div>
 
       <div className="mx-auto mt-4 max-w-[620px] rounded-lg border border-[#fde68a] bg-[#fffbeb] px-3 py-2 text-[11.5px] text-[var(--amber)]">
