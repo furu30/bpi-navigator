@@ -6,10 +6,10 @@ export default function HomePage() {
       <div className="inline-block rounded-[10px] bg-[#2563eb] px-3.5 py-[3px] text-[30px] font-extrabold text-white">
         型
       </div>
-      <h2 className="my-4 text-[26px] font-extrabold">業務改善ナビ</h2>
-      <p className="mb-2 text-[var(--muted)]">業務のムダを見つけて、減らす。</p>
+      <h2 className="my-4 text-[26px] font-extrabold">KATA Navi</h2>
+      <p className="mb-2 text-[var(--muted)]">仕事を「型」にして、改善し、受け継ぐ。</p>
       <p className="mb-2 text-[var(--muted)]">
-        作業を ECRS（排除・結合・交換・簡素化）で見直し、効率化します。
+        業務のムダを減らす（業務改善ナビ）と、属人的な技を受け継ぐ（再現性ナビ）。共通の業務棚卸しが土台です。
       </p>
 
       <div className="mx-auto mt-[26px] grid max-w-[620px] grid-cols-1 gap-4 text-left sm:grid-cols-2">
