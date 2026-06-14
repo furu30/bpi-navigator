@@ -2,11 +2,30 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { AiAssistModal } from "@/components/AiAssistModal";
 import { PlanModal } from "@/components/PlanModal";
-import { curPlans, useStore } from "@/lib/store";
-import type { Plan, PlanInput, PlanStatus } from "@/lib/types";
+import { monthly, totalScore } from "@/lib/calc";
+import { curTasks, curPlans, useStore } from "@/lib/store";
+import type { Plan, PlanInput, PlanStatus, Task } from "@/lib/types";
 
 const STATUSES: PlanStatus[] = ["未着手", "進行中", "完了"];
+
+const PLAN_AI_SYSTEM =
+  "あなたは中小製造業の業務改善コンサルタントです。以下の業務（優先度・ECRS区分・問題点つき）に対し、具体的な改善計画案（改善内容／想定手段／期待効果の目安）を業務ごとに簡潔な日本語で提案してください。ECRS（排除・結合・交換・簡素化）の観点を活かしてください。";
+
+function planAiContext(tasks: Task[]): string {
+  const targets = tasks.filter(
+    (t) => t.workType === "作業" || t.workType === "混在",
+  );
+  if (targets.length === 0) return "（作業・混在の業務がありません）";
+  return targets
+    .map((t) => {
+      const ecrs = t.ecrs ? ` / ECRS:${t.ecrs}` : "";
+      const probs = t.problems.length ? ` / 問題:${t.problems.join("・")}` : "";
+      return `- ${t.content}（${monthly(t)}分/月 / 優先度${totalScore(t.scores).toFixed(1)}${ecrs}${probs}）`;
+    })
+    .join("\n");
+}
 
 // A-4 改善計画（計画の追加・編集・削除、ステータス変更）
 export default function PlanPage() {
@@ -18,9 +37,11 @@ export default function PlanPage() {
     setPlanStatus,
   } = useStore();
   const [editing, setEditing] = useState<Plan | null>(null);
+  const [aiOpen, setAiOpen] = useState(false);
   if (!hydrated) return <div className="text-[var(--muted)]">読み込み中…</div>;
 
   const ps = curPlans(state);
+  const ts = curTasks(state);
 
   function handleSubmit(input: PlanInput) {
     if (editing) updatePlan(editing.id, input);
@@ -42,9 +63,8 @@ export default function PlanPage() {
         <h2 className="text-[20px] font-extrabold">改善計画（{ps.length}件）</h2>
         <button
           type="button"
-          disabled
-          title="ステップ7で実装予定"
-          className="rounded-[9px] border border-[#ddd6fe] bg-[#ede9fe] px-3 py-1.5 text-[12px] font-bold text-[#6d28d9] disabled:opacity-40"
+          onClick={() => setAiOpen(true)}
+          className="rounded-[9px] border border-[#ddd6fe] bg-[#ede9fe] px-3 py-1.5 text-[12px] font-bold text-[#6d28d9]"
         >
           🤖 AIアシスト
         </button>
@@ -135,6 +155,15 @@ export default function PlanPage() {
           initial={editing}
           onClose={() => setEditing(null)}
           onSubmit={handleSubmit}
+        />
+      )}
+
+      {aiOpen && (
+        <AiAssistModal
+          title="改善計画のAIアシスト"
+          system={PLAN_AI_SYSTEM}
+          context={`# 改善対象の業務\n${planAiContext(ts)}`}
+          onClose={() => setAiOpen(false)}
         />
       )}
     </>

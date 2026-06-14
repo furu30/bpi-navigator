@@ -2,12 +2,32 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { AiAssistModal } from "@/components/AiAssistModal";
 import { MmmTags, TypeTag } from "@/components/Tags";
 import { TaskModal } from "@/components/TaskModal";
 import { monthly } from "@/lib/calc";
 import { exportGroup } from "@/lib/io";
 import { curTasks, groupPlans, groupsOf, useStore } from "@/lib/store";
 import type { Task, TaskInput } from "@/lib/types";
+
+const STOCK_AI_SYSTEM =
+  "あなたは中小製造業の業務改善コンサルタントです。以下の業務棚卸しを読み、(1)抜けていそうな業務、(2)ムリ・ムダ・ムラの観点での気づき、(3)優先的に見直すべき業務、を簡潔な箇条書き（日本語）で提案してください。専門用語（5S・IE・ECRS等）は正確に使ってください。";
+
+function stockAiContext(tasks: Task[]): string {
+  if (tasks.length === 0) return "（登録された業務はありません）";
+  return tasks
+    .map((t) => {
+      const mmm = [
+        t.mmm.muri && "ムリ",
+        t.mmm.muda && "ムダ",
+        t.mmm.mura && "ムラ",
+      ]
+        .filter(Boolean)
+        .join("・");
+      return `- [${t.group}] ${t.content}（種別:${t.workType} / 担当:${t.person} / ${t.time}分・${t.freq}${mmm ? ` / ${mmm}` : ""}）`;
+    })
+    .join("\n");
+}
 
 // S-C1 業務の棚卸し（共通）— 全体一覧／単一業務名の2モード。
 // 業務の追加・編集・削除、業務名の名称変更・削除・保存。
@@ -18,6 +38,7 @@ export default function StockPage() {
   const store = useStore();
   const { state, hydrated, setCurrentGroup, addTask, updateTask } = store;
   const [modal, setModal] = useState<ModalState>(null);
+  const [aiOpen, setAiOpen] = useState(false);
 
   if (!hydrated) {
     return <div className="text-[var(--muted)]">読み込み中…</div>;
@@ -55,6 +76,7 @@ export default function StockPage() {
           onEnter={setCurrentGroup}
           onAdd={() => setModal({ mode: "new" })}
           onEdit={(task) => setModal({ mode: "edit", task })}
+          onAiAssist={() => setAiOpen(true)}
         />
       )}
 
@@ -74,6 +96,15 @@ export default function StockPage() {
           onSubmit={handleSubmit}
         />
       )}
+
+      {aiOpen && (
+        <AiAssistModal
+          title="業務棚卸しのAIアシスト"
+          system={STOCK_AI_SYSTEM}
+          context={`# 業務棚卸し（全${state.tasks.length}件）\n${stockAiContext(state.tasks)}`}
+          onClose={() => setAiOpen(false)}
+        />
+      )}
     </>
   );
 }
@@ -84,11 +115,13 @@ function AllGroupsView({
   onEnter,
   onAdd,
   onEdit,
+  onAiAssist,
 }: {
   groups: string[];
   onEnter: (g: string) => void;
   onAdd: () => void;
   onEdit: (task: Task) => void;
+  onAiAssist: () => void;
 }) {
   const { state, deleteTask } = useStore();
 
@@ -99,12 +132,7 @@ function AllGroupsView({
           業務一覧（{groups.length}業務名・作業{state.tasks.length}件）
         </h2>
         <div className="flex flex-wrap items-center gap-2.5">
-          <button
-            type="button"
-            disabled
-            title="ステップ7で実装予定"
-            className={`${btnAi} disabled:opacity-40`}
-          >
+          <button type="button" onClick={onAiAssist} className={btnAi}>
             🤖 AIアシスト
           </button>
           <button

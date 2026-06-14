@@ -1,6 +1,13 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import {
+  type AiSettings,
+  loadAiSettings,
+  PROVIDERS,
+  providerMeta,
+  saveAiSettings,
+} from "@/lib/aiSettings";
 import { exportAll, exportGroup, parseImport } from "@/lib/io";
 import { groupsOf, useStore } from "@/lib/store";
 
@@ -24,6 +31,7 @@ export default function SettingsPage() {
       </div>
 
       <CompanyCard />
+      <AiSettingsCard />
       <ProcessCategoryCard />
       <ProblemCategoryCard />
       <DataIoCard />
@@ -63,6 +71,106 @@ function CompanyCard() {
       <p className="mt-2 text-[12px] text-[var(--muted)]">
         入力は自動保存されます（このブラウザのlocalStorage）。
       </p>
+    </Card>
+  );
+}
+
+// ===== AI設定（BYOキー） =====
+function AiSettingsCard() {
+  const [s, setS] = useState<AiSettings | null>(null);
+  const [show, setShow] = useState(false);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- マウント後にlocalStorageから一度だけ復元
+    setS(loadAiSettings());
+  }, []);
+
+  if (!s) return null;
+
+  function update(patch: Partial<AiSettings>) {
+    setS((prev) => {
+      const base = prev ?? loadAiSettings();
+      let next = { ...base, ...patch };
+      // プロバイダー変更時はモデルを既定値に切り替える
+      if (patch.provider && patch.provider !== base.provider) {
+        next = { ...next, model: providerMeta(patch.provider).defaultModel };
+      }
+      saveAiSettings(next);
+      return next;
+    });
+  }
+
+  const meta = providerMeta(s.provider);
+
+  return (
+    <Card
+      title="AI設定（あなたのAPIキーを使用）"
+      desc="AIアシストは、ここで登録したあなたのキーで、ブラウザから各プロバイダへ直接アクセスします（サーバーは経由しません）。"
+    >
+      <div className="mb-3 rounded-lg border border-[#fde68a] bg-[#fffbeb] px-3 py-2 text-[11.5px] text-[var(--amber)]">
+        🔒 APIキーはお使いのブラウザ（localStorage）にのみ保存され、外部サーバーには送信されません。AIアシストは任意で、「AIに送る」を押したときだけ送信されます。
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div>
+          <label className={labelCls}>AIプロバイダー</label>
+          <select
+            value={s.provider}
+            onChange={(e) =>
+              update({ provider: e.target.value as AiSettings["provider"] })
+            }
+            className={inputCls}
+          >
+            {PROVIDERS.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.label}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className={labelCls}>モデルID</label>
+          <input
+            value={s.model}
+            onChange={(e) => update({ model: e.target.value })}
+            placeholder={meta.defaultModel}
+            className={inputCls}
+          />
+        </div>
+      </div>
+
+      <div className="mt-3">
+        <label className={labelCls}>APIキー</label>
+        <div className="flex gap-2">
+          <input
+            type={show ? "text" : "password"}
+            value={s.apiKey}
+            onChange={(e) => update({ apiKey: e.target.value })}
+            placeholder={meta.keyHint}
+            autoComplete="off"
+            className={inputCls}
+          />
+          <button
+            type="button"
+            onClick={() => setShow((v) => !v)}
+            className={btnOut}
+          >
+            {show ? "隠す" : "表示"}
+          </button>
+        </div>
+        <p className="mt-1.5 text-[12px] text-[var(--muted)]">
+          キーの取得：
+          <a
+            href={meta.keyUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-bold text-[var(--blue)]"
+          >
+            {meta.label} のキー発行ページ
+          </a>
+          （{meta.keyHint}）。{s.apiKey.trim() ? "✅ キー登録済み" : "未登録"}
+        </p>
+      </div>
     </Card>
   );
 }
@@ -359,6 +467,7 @@ function DataIoCard() {
   );
 }
 
+const labelCls = "mb-1 block text-[12.5px] font-bold text-[#475569]";
 const inputCls =
   "w-full rounded-lg border-[1.5px] border-[var(--line)] px-[11px] py-[9px] text-[13.5px] focus:border-[var(--blue)] focus:outline-none disabled:opacity-50";
 const btnPri =
